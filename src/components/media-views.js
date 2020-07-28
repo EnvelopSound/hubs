@@ -16,6 +16,7 @@ import { applyPersistentSync } from "../utils/permissions-utils";
 import { refreshMediaMirror, getCurrentMirroredMedia } from "../utils/mirror-utils";
 import { detect } from "detect-browser";
 import semver from "semver";
+import { ambisonicsAudioSource } from "./ambisonics-audio-source.js";
 
 /**
  * Warning! This require statement is fragile!
@@ -541,6 +542,8 @@ AFRAME.registerComponent("media-video", {
       this.audio = new THREE.PositionalAudio(this.el.sceneEl.audioListener);
       this.setPositionalAudioProperties();
       this.distanceBasedAttenuation = 1;
+    } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
+      this.audio = new ambisonicsAudioSource(this.el.sceneEl.audioListener);
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
