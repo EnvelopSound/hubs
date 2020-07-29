@@ -17,7 +17,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   setNodeSource(newMediaElementAudioSource) {
     console.log("ambisonics: setNodeSource");
     // todo: call setNodeSource on each loudspeaker with decoded stream
-    this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
+   // this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
   }
 
   disconnect() {
@@ -91,6 +91,29 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       ls.panner.coneOuterAngle = this.panner.coneOuterAngle;
       ls.panner.coneOuterGain = this.panner.coneOuterGain;
     }
+  }
+
+  setupConnectDecoder(mediaElementAudioSource) {
+
+    console.log("ambisonics: setting up decoder");
+    console.log(this.context);
+    console.log(mediaElementAudioSource); 
+    
+    this.decoderNode = new MatrixMultiplier(this.context, this.decoderMatrix);
+
+    mediaElementAudioSource.connect(this.decoderNode.in); 
+    this.decoderNode.out.connect(this.loudspeakers[0].panner, 0, 0); 
+
+   // mediaElementAudioSource.connect(this.loudspeakers[0].panner, 0, 0)
+
+    console.log("ambisonics:: All connections made!");
+
+    console.log(this.context);
+
+  
+
+
+    //this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
   }
 
   loadDecoderConfig(newDecoderConfig) {

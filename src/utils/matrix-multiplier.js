@@ -5,14 +5,13 @@
 export default class MatrixMultiplier {
   constructor(audioCtx, decoderMatrix) {
     this.ctx = audioCtx;
-    this.nChIn = decoderMatrix.length;
-    this.nChOut = decoderMatrix[0].length;
+    this.nChOut = decoderMatrix.length;
+    this.nChIn = decoderMatrix[0].length;
 
     console.log("MatrixMultiplier:: Input chans" + this.nChIn);
     console.log("MatrixMultiplier:: Output chans" + this.nChOut);
 
-    this.initializeMatrix();
-    this.bypassed = false;
+    this.mtx = decoderMatrix;
 
     // Input and output nodes
     this.in = this.ctx.createChannelSplitter(this.nCh);
@@ -34,10 +33,6 @@ export default class MatrixMultiplier {
   }
 
   updateMtx(mtx) {
-    if (this.bypassed) {
-      return;
-    }
-
     this.mtx = mtx;
 
     for (let row = 0; row < this.nCh; row++) {
@@ -62,7 +57,7 @@ export default class MatrixMultiplier {
       //outputs
       for (let col = 0; col < this.nChIn; col++) {
         //inputs
-        if (row == col){
+        if (row == col) {
           this.mtx[row][col] = 1;
         } else {
           this.mtx[row][col] = 0; //set new gains
