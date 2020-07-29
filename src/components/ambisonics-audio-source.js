@@ -1,4 +1,5 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
+import MatrixMultiplier from "../utils/matrix-multiplier.js";
 
 export class ambisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl) {
@@ -73,5 +74,37 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
   loadDecoderConfig(newDecoderConfig) {
     console.log("ambisonics: loadDecoderConfig");
+
+    // todo: load json from url (CORS!)
+
+    // let loader = new THREE.FileLoader();
+    // loader.load(
+    //   newDecoderConfig,
+
+    //   // onLoad callback
+    //   function (data) {
+    //     // output the text to the console
+    //     console.log(data)
+    //   },
+
+    //   // onProgress callback
+    //   function (xhr) {
+    //     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    //   },
+
+    //   // onError callback
+    //   function (err) {
+    //     console.error('An error happened');
+    //   }
+    // );
+
+    this.decoderConfig = defaultAmbiDecoderConfig;
+
+    console.log(this.decoderConfig);
+    this.loudspeakerSetup = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
+    this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
+
+    console.log(this.loudspeakerSetup);
+    console.log(this.decoderMatrix);
   }
 }
