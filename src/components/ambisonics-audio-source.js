@@ -9,28 +9,14 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.audioListener = this.el.sceneEl.audioListener;
     this.gain = { gain: { value: 1 } };
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
-    this.numLoudspeakers = 10;
     this.loudspeakers = [];
     console.log("ambisonics: constructing ambisonicsAudioSource!");
-
-    this.constructLoudspeakers();
   }
 
   setNodeSource(newMediaElementAudioSource) {
     console.log("ambisonics: setNodeSource");
     // todo: call setNodeSource on each loudspeaker with decoded stream
     this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
-
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshBasicMaterial();
-    const cube = new THREE.Mesh(geometry, material);
-
-    this.el.setObject3D("lscube", cube);
-    console.log(this.el.object3DMap.lscube);
-    this.el.object3DMap.lscube.position.x = 10;
-    this.el.object3DMap.lscube.position.y = 0;
-    this.el.object3DMap.lscube.position.z = 10;
-    cube.add(this.loudspeakers[0]);
   }
 
   disconnect() {
@@ -59,9 +45,27 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
   constructLoudspeakers() {
     console.log("ambisonics: constructLoudspeakers");
+
+    if (!this.LoudspeakerLayout)
+      console.error('no loudspeaker setup available!');
+
+    this.numLoudspeakers = this.LoudspeakerLayout.length;
+    console.log(this.numLoudspeakers);
+
     this.loudspeakers = [];
     for (let i = 0; i < this.numLoudspeakers; ++i)
       this.loudspeakers[i] = new THREE.PositionalAudio(this.audioListener);
+
+    const geometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshBasicMaterial();
+    const cube = new THREE.Mesh(geometry, material);
+
+    this.el.setObject3D("lscube", cube);
+    console.log(this.el.object3DMap.lscube);
+    this.el.object3DMap.lscube.position.x = 10;
+    this.el.object3DMap.lscube.position.y = 0;
+    this.el.object3DMap.lscube.position.z = 10;
+    cube.add(this.loudspeakers[0]);
   }
 
   updatePannerProperties() {
@@ -102,10 +106,12 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.decoderConfig = defaultAmbiDecoderConfig;
 
     console.log(this.decoderConfig);
-    this.loudspeakerSetup = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
+    this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
     this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
 
-    console.log(this.loudspeakerSetup);
+    console.log(this.LoudspeakerLayout);
     console.log(this.decoderMatrix);
+
+    this.constructLoudspeakers();
   }
 }
