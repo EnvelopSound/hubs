@@ -50,18 +50,15 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     if (!this.LoudspeakerLayout)
       console.error('no loudspeaker setup available!');
 
-    this.numLoudspeakers = this.LoudspeakerLayout.length;
-
     this.loudspeakers = [];
     this.numLoudspeakers = 0;
     for (const lsp of this.LoudspeakerLayout) {
       if (!lsp.IsImaginary) {
-        this.numLoudspeakers++;
         this.loudspeakers.push(new THREE.PositionalAudio(this.audioListener));
 
         // create threejs mesh objects as loudspeakers
         const geometry = new THREE.BoxGeometry(0.2, 0.5, 0.3);
-        const material = new THREE.MeshStandardMaterial({ Color: 0x675d50 });
+        const material = new THREE.MeshNormalMaterial({ Color: 0x675d50 });
         const cube = new THREE.Mesh(geometry, material);
 
         const componentString = "ls" + this.numLoudspeakers;
@@ -76,10 +73,10 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         lspObject.position.x = positionCartesian.x;
         lspObject.position.y = positionCartesian.y;
         lspObject.position.z = positionCartesian.z;
-
         lspObject.lookAt(this.arrayCenter);
         cube.add(this.loudspeakers[this.numLoudspeakers]);
-        console.log(lspObject);
+
+        this.numLoudspeakers++;
       }
     }
   }
