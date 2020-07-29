@@ -10,6 +10,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.gain = { gain: { value: 1 } };
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
+    this.arrayCenter = this.el.object3D.position;
     console.log("ambisonics: constructing ambisonicsAudioSource!");
   }
 
@@ -50,22 +51,37 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       console.error('no loudspeaker setup available!');
 
     this.numLoudspeakers = this.LoudspeakerLayout.length;
-    console.log(this.numLoudspeakers);
 
     this.loudspeakers = [];
-    for (let i = 0; i < this.numLoudspeakers; ++i)
-      this.loudspeakers[i] = new THREE.PositionalAudio(this.audioListener);
+    this.numLoudspeakers = 0;
+    for (const lsp of this.LoudspeakerLayout) {
+      if (!lsp.IsImaginary) {
+        this.numLoudspeakers++;
+        this.loudspeakers.push(new THREE.PositionalAudio(this.audioListener));
 
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshBasicMaterial();
-    const cube = new THREE.Mesh(geometry, material);
+        // create threejs mesh objects as loudspeakers
+        const geometry = new THREE.BoxGeometry(0.2, 0.5, 0.3);
+        const material = new THREE.MeshStandardMaterial({ Color: 0x675d50 });
+        const cube = new THREE.Mesh(geometry, material);
 
-    this.el.setObject3D("lscube", cube);
-    console.log(this.el.object3DMap.lscube);
-    this.el.object3DMap.lscube.position.x = 10;
-    this.el.object3DMap.lscube.position.y = 0;
-    this.el.object3DMap.lscube.position.z = 10;
-    cube.add(this.loudspeakers[0]);
+        const componentString = "ls" + this.numLoudspeakers;
+        const positionCartesian = new THREE.Vector3();
+        positionCartesian.setFromSphericalCoords(
+          lsp.Radius,
+          Math.PI / 2 - THREE.Math.degToRad(lsp.Elevation),
+          THREE.Math.degToRad(lsp.Azimuth)
+        );
+        this.el.setObject3D(componentString, cube);
+        const lspObject = this.el.getObject3D(componentString);
+        lspObject.position.x = positionCartesian.x;
+        lspObject.position.y = positionCartesian.y;
+        lspObject.position.z = positionCartesian.z;
+
+        lspObject.lookAt(this.arrayCenter);
+        cube.add(this.loudspeakers[this.numLoudspeakers]);
+        console.log(lspObject);
+      }
+    }
   }
 
   updatePannerProperties() {
