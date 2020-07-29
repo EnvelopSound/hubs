@@ -96,24 +96,24 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   setupConnectDecoder(mediaElementAudioSource) {
 
     console.log("ambisonics: setting up decoder");
-    console.log(this.context);
-    console.log(mediaElementAudioSource); 
     
     this.decoderNode = new MatrixMultiplier(this.context, this.decoderMatrix);
 
-    mediaElementAudioSource.connect(this.decoderNode.in); 
-    this.decoderNode.out.connect(this.loudspeakers[0].panner, 0, 0); 
+    // connect media to decoder
+    mediaElementAudioSource.connect(this.decoderNode.in);
 
-   // mediaElementAudioSource.connect(this.loudspeakers[0].panner, 0, 0)
+    // split decoder Output
+    this.outSplit = this.context.createChannelSplitter(this.numLoudspeakers);
+    this.decoderNode.out.connect(this.outSplit);
 
-    console.log("ambisonics:: All connections made!");
+    // connect the decoder outputs to virtual speakers
+    for (let iSpeaker = 0; iSpeaker < this.numLoudspeakers; iSpeaker++) {
+      this.outSplit.connect(this.loudspeakers[iSpeaker].panner, iSpeaker, 0);
+    }
 
-    console.log(this.context);
+    // BYPASSES DECODER !
+    //mediaElementAudioSource.connect(this.loudspeakers[0].panner, 0, 0); 
 
-  
-
-
-    //this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
   }
 
   loadDecoderConfig(newDecoderConfig) {
