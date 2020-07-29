@@ -227,6 +227,15 @@ async function mediaInflator(el, componentName, componentData, components) {
       mediaOptions.coneInnerAngle = componentData.coneInnerAngle;
       mediaOptions.coneOuterAngle = componentData.coneOuterAngle;
       mediaOptions.coneOuterGain = componentData.coneOuterGain;
+    } else if (componentData.audioType === "ambisonics") {
+      mediaOptions.distanceModel = componentData.distanceModel;
+      mediaOptions.rolloffFactor = componentData.rolloffFactor;
+      mediaOptions.refDistance = componentData.refDistance;
+      mediaOptions.maxDistance = componentData.maxDistance;
+      mediaOptions.coneInnerAngle = componentData.coneInnerAngle;
+      mediaOptions.coneOuterAngle = componentData.coneOuterAngle;
+      mediaOptions.coneOuterGain = componentData.coneOuterGain;
+      mediaOptions.loudspeakerSetupUrl = componentData.loudspeakerSetupUrl;
     }
 
     el.setAttribute("video-pause-state", { paused: mediaOptions.videoPaused });

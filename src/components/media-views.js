@@ -17,6 +17,7 @@ import { refreshMediaMirror, getCurrentMirroredMedia } from "../utils/mirror-uti
 import { detect } from "detect-browser";
 import semver from "semver";
 import { ambisonicsAudioSource } from "./ambisonics-audio-source.js";
+import ambiDecoderConfig from "../assets/ambisonics/cube.json";
 
 /**
  * Warning! This require statement is fragile!
@@ -258,7 +259,8 @@ AFRAME.registerComponent("media-video", {
     projection: { type: "string", default: "flat" },
     time: { type: "number" },
     tickRate: { default: 1000 }, // ms interval to send time interval updates
-    syncTolerance: { default: 2 }
+    syncTolerance: { default: 2 },
+    loudspeakerSetupUrl: { type: "string", default: "testurl.json" }
   },
 
   init() {
@@ -524,7 +526,9 @@ AFRAME.registerComponent("media-video", {
 
     const disablePositionalAudio = window.APP.store.state.preferences.audioOutputMode === "audio";
     const shouldSetPositionalAudioProperties =
-      this.audio && this.data.audioType === "pannernode" && !disablePositionalAudio;
+      this.audio &&
+      (this.data.audioType === "pannernode" || this.data.audioType === "ambisonics") &&
+      !disablePositionalAudio;
     if (shouldSetPositionalAudioProperties) {
       this.setPositionalAudioProperties();
       return;
@@ -544,6 +548,16 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       this.audio = new ambisonicsAudioSource(this.el.sceneEl.audioListener);
+      console.log(ambiDecoderConfig);
+      console.log("print data and element");
+      console.log(this.data);
+      console.log(this.el);
+      console.log(this.el.object3D.position);
+      // this.el.object3D.object3DMap has mesh, object3D (name: video), sound
+      // this.audio.setSource(this.data.loudspeakerSetupUrl);
+
+      this.setPositionalAudioProperties();
+      this.distanceBasedAttenuation = 1;
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
@@ -560,6 +574,9 @@ AFRAME.registerComponent("media-video", {
     this.audio.panner.coneInnerAngle = this.data.coneInnerAngle;
     this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
     this.audio.panner.coneOuterGain = this.data.coneOuterGain;
+
+    if (this.data.audioType === "ambisonics")
+      this.audio.updatePannerProperties();
   },
 
   async updateSrc(oldData) {

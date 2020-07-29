@@ -4,7 +4,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     super();
     this.audioListener = audioListener;
     this.gain = 0;
-    this.panner = 0; // coneInnerAngle, coneOuterAngle, coneOuterGain
+    this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.numLoudspeakers = 10;
     this.loudspeakers = [];
     console.log("ambisonics: constructing ambisonicsAudioSource!");
@@ -21,36 +21,38 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   }
 
   setDistanceModel(newDistanceModel) {
-    for (const ls in this.loudspeakers)
+    for (const ls of this.loudspeakers)
       ls.distanceModel = newDistanceModel;
   }
 
   setRolloffFactor(newRolloffFactor) {
-    for (const ls in this.loudspeakers)
+    for (const ls of this.loudspeakers)
       ls.rolloffFactor = newRolloffFactor;
   }
 
   setRefDistance(newRefDistance) {
-    for (const ls in this.loudspeakers)
+    for (const ls of this.loudspeakers)
       ls.refDistance = newRefDistance;
   }
 
   setMaxDistance(newMaxDistance) {
-    for (const ls in this.loudspeakers)
+    for (const ls of this.loudspeakers)
       ls.maxDistance = newMaxDistance;
   }
 
   constructLoudspeakers() {
-    console.log("ambisonics: constructLoudspeakers")
+    console.log("ambisonics: constructLoudspeakers");
     this.loudspeakers = [];
     for (let i = 0; i < this.numLoudspeakers; ++i)
       this.loudspeakers[i] = new THREE.PositionalAudio(this.audioListener);
   }
-}
 
-AFRAME.registerComponent("ambisonics-audio-source", {
-  schema: {
-    audioUrl: { default: "" },
-    jsonSetupUrl: { default: "" }
+  updatePannerProperties() {
+    console.log("ambsionics: updatePannerProperties");
+    for (const ls of this.loudspeakers) {
+      ls.panner.coneInnerAngle = this.panner.coneInnerAngle;
+      ls.panner.coneOuterAngle = this.panner.coneOuterAngle;
+      ls.panner.coneOuterGain = this.panner.coneOuterGain;
+    }
   }
-});
+}
