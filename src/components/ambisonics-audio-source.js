@@ -1,9 +1,11 @@
-//const components = [];
+import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
+
 export class ambisonicsAudioSource extends THREE.Object3D {
-  constructor(audioListener) {
+  constructor(mediaEl) {
     super();
-    this.audioListener = audioListener;
-    this.gain = 0;
+    this.el = mediaEl;
+    this.audioListener = this.el.sceneEl.audioListener;
+    this.gain = { gain: { value: 1 } };
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.numLoudspeakers = 10;
     this.loudspeakers = [];
@@ -12,8 +14,21 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.constructLoudspeakers();
   }
 
-  setNodeSource() {
+  setNodeSource(newMediaElementAudioSource) {
     console.log("ambisonics: setNodeSource");
+    // todo: call setNodeSource on each loudspeaker with decoded stream
+    this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
+
+    const geometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshBasicMaterial();
+    const cube = new THREE.Mesh(geometry, material);
+
+    this.el.setObject3D("lscube", cube);
+    console.log(this.el.object3DMap.lscube);
+    this.el.object3DMap.lscube.position.x = 10;
+    this.el.object3DMap.lscube.position.y = 0;
+    this.el.object3DMap.lscube.position.z = 10;
+    cube.add(this.loudspeakers[0]);
   }
 
   disconnect() {
@@ -54,5 +69,9 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       ls.panner.coneOuterAngle = this.panner.coneOuterAngle;
       ls.panner.coneOuterGain = this.panner.coneOuterGain;
     }
+  }
+
+  loadDecoderConfig(newDecoderConfig) {
+    console.log("ambisonics: loadDecoderConfig");
   }
 }

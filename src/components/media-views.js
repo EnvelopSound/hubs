@@ -17,7 +17,6 @@ import { refreshMediaMirror, getCurrentMirroredMedia } from "../utils/mirror-uti
 import { detect } from "detect-browser";
 import semver from "semver";
 import { ambisonicsAudioSource } from "./ambisonics-audio-source.js";
-import ambiDecoderConfig from "../assets/ambisonics/cube.json";
 
 /**
  * Warning! This require statement is fragile!
@@ -547,14 +546,15 @@ AFRAME.registerComponent("media-video", {
       this.setPositionalAudioProperties();
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
-      this.audio = new ambisonicsAudioSource(this.el.sceneEl.audioListener);
-      console.log(ambiDecoderConfig);
-      console.log("print data and element");
-      console.log(this.data);
-      console.log(this.el);
-      console.log(this.el.object3D.position);
+      this.audio = new ambisonicsAudioSource(this.el);
+      // console.log(ambiDecoderConfig);
+      // console.log("print data and element");
+      // console.log(this.data);
+      // console.log(this.el);
+      // console.log(this.el.object3D.position);
+      // console.log(this.audio);
+      // console.log(this.audio.position);
       // this.el.object3D.object3DMap has mesh, object3D (name: video), sound
-      // this.audio.setSource(this.data.loudspeakerSetupUrl);
 
       this.setPositionalAudioProperties();
       this.distanceBasedAttenuation = 1;
@@ -575,8 +575,12 @@ AFRAME.registerComponent("media-video", {
     this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
     this.audio.panner.coneOuterGain = this.data.coneOuterGain;
 
-    if (this.data.audioType === "ambisonics")
+    if (this.data.audioType === "ambisonics") {
       this.audio.updatePannerProperties();
+      
+      if (this.data.loudspeakerSetupUrl)
+        this.audio.loadDecoderConfig(this.data.loudspeakerSetupUrl);
+    }
   },
 
   async updateSrc(oldData) {
@@ -968,7 +972,11 @@ AFRAME.registerComponent("media-video", {
             window.APP.store.state.preferences.globalMediaVolume !== undefined
               ? window.APP.store.state.preferences.globalMediaVolume
               : 100;
-          this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume * this.distanceBasedAttenuation;
+
+          if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
+            this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
+          else
+            this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume * this.distanceBasedAttenuation;
         }
       }
     };
