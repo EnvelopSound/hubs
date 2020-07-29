@@ -547,6 +547,7 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       this.audio = new ambisonicsAudioSource(this.el);
+
       // console.log(ambiDecoderConfig);
       // console.log("print data and element");
       // console.log(this.data);
@@ -562,7 +563,8 @@ AFRAME.registerComponent("media-video", {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
 
-    this.audio.setNodeSource(this.mediaElementAudioSource);
+    this.audio.setupConnectDecoder(this.mediaElementAudioSource); 
+    //this.audio.setNodeSource(this.mediaElementAudioSource);
     this.el.setObject3D("sound", this.audio);
   },
 
