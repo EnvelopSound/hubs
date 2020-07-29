@@ -5,6 +5,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl) {
     super();
     this.el = mediaEl;
+    this.context = this.el.sceneEl.audioListener.context;
     this.audioListener = this.el.sceneEl.audioListener;
     this.gain = { gain: { value: 1 } };
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
