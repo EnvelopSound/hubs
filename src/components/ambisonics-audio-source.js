@@ -1,9 +1,9 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/matrix-multiplier.js";
 
-export class ambisonicsAudioSource extends THREE.Object3D {
+export class ambisonicsAudioSource extends THREE.PositionalAudio {
   constructor(mediaEl) {
-    super();
+    super(mediaEl.sceneEl.audioListener);
 
     // create new entity for loudspeaker array and add to scene
     this.el = document.createElement("a-entity"); // entity for loudspeaker array
@@ -12,7 +12,6 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.mediaEl = mediaEl; // entity for element containing audio / video player
     this.context = this.mediaEl.sceneEl.audioListener.context;
     this.audioListener = this.mediaEl.sceneEl.audioListener;
-    this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
@@ -161,11 +160,15 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.loudspeakerArrayOffset = newLoudspeakerArrayOffset;
     this.loudspeakerVisible = loudspeakerShouldBeVisible;
 
-    const theta = this.el.object3D.rotation._y;
-    const phi = Math.PI / 2 - this.el.object3D.rotation._x;
+    const offsetNormalVectorAzi = this.el.object3D.rotation._y;
+    const offsetNormalVectorZen = Math.PI / 2 - this.el.object3D.rotation._x;
 
     this.loudspeakerArrayOffsetVector = new THREE.Vector3();
-    this.loudspeakerArrayOffsetVector.setFromSphericalCoords(this.loudspeakerArrayOffset, phi, theta);
+    this.loudspeakerArrayOffsetVector.setFromSphericalCoords(
+      this.loudspeakerArrayOffset,
+      offsetNormalVectorZen,
+      offsetNormalVectorAzi
+    );
 
     this.constructLoudspeakers();
   }
