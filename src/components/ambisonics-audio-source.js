@@ -1,21 +1,20 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/matrix-multiplier.js";
-import { subset } from "semver";
-import { Spherical } from "three";
 
 export class ambisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl) {
     super();
-    this.el = mediaEl;
 
-    console.log("element after scale reset"); 
-    console.log(this.el); 
+    // create new entity for loudspeaker array and add to scene
+    this.el = document.createElement("a-entity"); // entity for loudspeaker array
+    document.querySelector("a-scene").appendChild(this.el);
 
-    this.context = this.el.sceneEl.audioListener.context;
-    this.audioListener = this.el.sceneEl.audioListener;
+    this.mediaEl = mediaEl; // entity for element containing audio / video player
+    this.context = this.mediaEl.sceneEl.audioListener.context;
+    this.audioListener = this.mediaEl.sceneEl.audioListener;
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
-    this.arrayCenter = this.el.object3D.position;
+    this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
     console.log("ambisonics: constructing ambisonicsAudioSource!");
   }
@@ -49,32 +48,11 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
     if (!this.LoudspeakerLayout)
       console.error('no loudspeaker setup available!');
-     
-    console.log("Array center before"); 
-    console.log(this.arrayCenter); 
 
-    this.arrayCenter = this.el.object3D.position;
+    this.arrayCenter = this.mediaEl.object3D.position;
     this.arrayCenter.x += this.loudspeakerArrayOffsetVector.x;
     this.arrayCenter.y += this.loudspeakerArrayOffsetVector.y;
     this.arrayCenter.z += this.loudspeakerArrayOffsetVector.z;
-   
-    console.log("Array center after"); 
-    console.log(this.arrayCenter); 
-
-    const centerMarkerGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const centerMarkerMaterial = new THREE.MeshBasicMaterial();
-    const centerMarkerCube = new THREE.Mesh(centerMarkerGeometry, centerMarkerMaterial);
-
-    
-
-    this.el.setObject3D("centerMarker", centerMarkerCube);
-    const centerMarker = this.el.getObject3D("centerMarker");
-
-    centerMarker.position.x = this.arrayCenter.x;
-    centerMarker.position.y = this.arrayCenter.y;
-    centerMarker.position.z = this.arrayCenter.z; 
-
-    centerMarker.scale.x = 1 / 3; 
 
     this.loudspeakers = [];
     this.numLoudspeakers = 0;
@@ -83,7 +61,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         this.loudspeakers.push(new THREE.PositionalAudio(this.audioListener));
 
         // create threejs mesh objects as loudspeakers
-        const geometry = new THREE.BoxGeometry(0.2, 0.5, 0.3);
+        const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
         const material = new THREE.MeshNormalMaterial({ Color: 0x675d50 });
         const cube = new THREE.Mesh(geometry, material);
 
@@ -98,16 +76,11 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         this.el.setObject3D(componentString, cube);
         const lspObject = this.el.getObject3D(componentString);
 
-        lspObject.scale.x = 1 / 3;
-
         lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x;
         lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y;
         lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z;
 
         lspObject.lookAt(this.arrayCenter);
-   
-        console.log(lspObject);
-
         cube.add(this.loudspeakers[this.numLoudspeakers]);
 
         cube.visible = this.loudspeakerVisible;
@@ -149,12 +122,12 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
   }
 
-  loadDecoderConfig(newDecoderConfigUrl, newloudspeakerArrayOffset, newloudspeakerVisible) {
+  loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
     console.log("ambisonics: loadDecoderConfig");
 
     if (this.decoderConfigUrl === newDecoderConfigUrl)
       return;
-    
+
     this.decoderConfigUrl = newDecoderConfigUrl;
 
     // todo: load json from url (CORS!)
@@ -182,24 +155,17 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
     this.decoderConfig = defaultAmbiDecoderConfig;
 
-    console.log(this.decoderConfig);
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
     this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
 
-    this.loudspeakerArrayOffset = newloudspeakerArrayOffset;
-    this.loudspeakerVisible = newloudspeakerVisible;
-
-    console.log(this.LoudspeakerLayout);
-    console.log(this.decoderMatrix);
+    this.loudspeakerArrayOffset = newLoudspeakerArrayOffset;
+    this.loudspeakerVisible = loudspeakerShouldBeVisible;
 
     const theta = this.el.object3D.rotation._y;
-    const phi =  Math.PI / 2 - this.el.object3D.rotation._x;
+    const phi = Math.PI / 2 - this.el.object3D.rotation._x;
 
     this.loudspeakerArrayOffsetVector = new THREE.Vector3();
     this.loudspeakerArrayOffsetVector.setFromSphericalCoords(this.loudspeakerArrayOffset, phi, theta);
-
-    console.log("array offset vector is "); 
-    console.log(this.loudspeakerArrayOffsetVector);
 
     this.constructLoudspeakers();
   }

@@ -585,15 +585,14 @@ AFRAME.registerComponent("media-video", {
 
     if (this.data.audioType === "ambisonics") {
       this.audio.updatePannerProperties();
-      console.log(this.data);  
 
-      if (this.data.loudspeakerSetupUrl)
+      if (this.data.loudspeakerSetupUrl) {
         this.audio.loadDecoderConfig(
           this.data.loudspeakerSetupUrl,
           this.data.loudspeakerArrayOffset,
           this.data.loudspeakerVisible
         );
-        
+      }
     }
   },
 
