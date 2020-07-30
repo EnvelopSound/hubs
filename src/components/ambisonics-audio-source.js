@@ -1,10 +1,16 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/matrix-multiplier.js";
+import { subset } from "semver";
+import { Spherical } from "three";
 
 export class ambisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl) {
     super();
     this.el = mediaEl;
+
+    console.log("element after scale reset"); 
+    console.log(this.el); 
+
     this.context = this.el.sceneEl.audioListener.context;
     this.audioListener = this.el.sceneEl.audioListener;
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
@@ -43,6 +49,32 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
     if (!this.LoudspeakerLayout)
       console.error('no loudspeaker setup available!');
+     
+    console.log("Array center before"); 
+    console.log(this.arrayCenter); 
+
+    this.arrayCenter = this.el.object3D.position;
+    this.arrayCenter.x += this.loudspeakerArrayOffsetVector.x;
+    this.arrayCenter.y += this.loudspeakerArrayOffsetVector.y;
+    this.arrayCenter.z += this.loudspeakerArrayOffsetVector.z;
+   
+    console.log("Array center after"); 
+    console.log(this.arrayCenter); 
+
+    const centerMarkerGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const centerMarkerMaterial = new THREE.MeshBasicMaterial();
+    const centerMarkerCube = new THREE.Mesh(centerMarkerGeometry, centerMarkerMaterial);
+
+    
+
+    this.el.setObject3D("centerMarker", centerMarkerCube);
+    const centerMarker = this.el.getObject3D("centerMarker");
+
+    centerMarker.position.x = this.arrayCenter.x;
+    centerMarker.position.y = this.arrayCenter.y;
+    centerMarker.position.z = this.arrayCenter.z; 
+
+    centerMarker.scale.x = 1 / 3; 
 
     this.loudspeakers = [];
     this.numLoudspeakers = 0;
@@ -62,14 +94,23 @@ export class ambisonicsAudioSource extends THREE.Object3D {
           Math.PI / 2 - THREE.Math.degToRad(lsp.Elevation),
           THREE.Math.degToRad(lsp.Azimuth)
         );
+
         this.el.setObject3D(componentString, cube);
         const lspObject = this.el.getObject3D(componentString);
-        lspObject.position.x = positionCartesian.x;
-        lspObject.position.y = positionCartesian.y;
-        lspObject.position.z = positionCartesian.z;
+
+        lspObject.scale.x = 1 / 3;
+
+        lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x;
+        lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y;
+        lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z;
+
         lspObject.lookAt(this.arrayCenter);
+   
+        console.log(lspObject);
+
         cube.add(this.loudspeakers[this.numLoudspeakers]);
 
+        cube.visible = this.loudspeakerVisible;
         this.numLoudspeakers++;
       }
     }
@@ -108,7 +149,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
   }
 
-  loadDecoderConfig(newDecoderConfigUrl) {
+  loadDecoderConfig(newDecoderConfigUrl, newloudspeakerArrayOffset, newloudspeakerVisible) {
     console.log("ambisonics: loadDecoderConfig");
 
     if (this.decoderConfigUrl === newDecoderConfigUrl)
@@ -145,8 +186,20 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
     this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
 
+    this.loudspeakerArrayOffset = newloudspeakerArrayOffset;
+    this.loudspeakerVisible = newloudspeakerVisible;
+
     console.log(this.LoudspeakerLayout);
     console.log(this.decoderMatrix);
+
+    const theta = this.el.object3D.rotation._y;
+    const phi =  Math.PI / 2 - this.el.object3D.rotation._x;
+
+    this.loudspeakerArrayOffsetVector = new THREE.Vector3();
+    this.loudspeakerArrayOffsetVector.setFromSphericalCoords(this.loudspeakerArrayOffset, phi, theta);
+
+    console.log("array offset vector is "); 
+    console.log(this.loudspeakerArrayOffsetVector);
 
     this.constructLoudspeakers();
   }

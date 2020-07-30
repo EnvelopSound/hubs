@@ -261,7 +261,7 @@ AFRAME.registerComponent("media-video", {
     syncTolerance: { default: 2 },
     loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
     loudspeakerVisible: { type: "string", default: true },
-    loudspeakerArrayOffset: { type: "string", default: 0 }
+    loudspeakerArrayOffset: { type: "number", default: 10}
   },
 
   init() {
@@ -556,9 +556,9 @@ AFRAME.registerComponent("media-video", {
       this.audio = new ambisonicsAudioSource(this.el);
 
       // console.log(ambiDecoderConfig);
-      // console.log("print data and element");
-      // console.log(this.data);
-      // console.log(this.el);
+      console.log("print video data and element");
+      console.log(this.data);
+      console.log(this.el);
       // console.log(this.el.object3D.position);
       // console.log(this.audio);
       // console.log(this.audio.position);
@@ -585,9 +585,15 @@ AFRAME.registerComponent("media-video", {
 
     if (this.data.audioType === "ambisonics") {
       this.audio.updatePannerProperties();
+      console.log(this.data);  
 
       if (this.data.loudspeakerSetupUrl)
-        this.audio.loadDecoderConfig(this.data.loudspeakerSetupUrl);
+        this.audio.loadDecoderConfig(
+          this.data.loudspeakerSetupUrl,
+          this.data.loudspeakerArrayOffset,
+          this.data.loudspeakerVisible
+        );
+        
     }
   },
 
