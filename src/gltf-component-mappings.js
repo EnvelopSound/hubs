@@ -236,6 +236,8 @@ async function mediaInflator(el, componentName, componentData, components) {
       mediaOptions.coneOuterAngle = componentData.coneOuterAngle;
       mediaOptions.coneOuterGain = componentData.coneOuterGain;
       mediaOptions.loudspeakerSetupUrl = componentData.loudspeakerSetupUrl;
+      mediaOptions.loudspeakerVisible = componentData.loudspeakerVisible;
+      mediaOptions.loudspeakerArrayOffset = componentData.loudspeakerArrayOffset;
     }
 
     el.setAttribute("video-pause-state", { paused: mediaOptions.videoPaused });
