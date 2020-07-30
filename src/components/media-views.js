@@ -163,7 +163,7 @@ function disposeTexture(texture) {
 
   texture.dispose();
 }
-
+2
 class TextureCache {
   cache = new Map();
 
@@ -259,7 +259,9 @@ AFRAME.registerComponent("media-video", {
     time: { type: "number" },
     tickRate: { default: 1000 }, // ms interval to send time interval updates
     syncTolerance: { default: 2 },
-    loudspeakerSetupUrl: { type: "string", default: "testurl.json" }
+    loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
+    loudspeakerVisible: { type: "string", default: true },
+    loudspeakerArrayOffset: { type: "string", default: 0 }
   },
 
   init() {
