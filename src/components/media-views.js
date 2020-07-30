@@ -477,7 +477,11 @@ AFRAME.registerComponent("media-video", {
         window.APP.store.state.preferences.globalMediaVolume !== undefined
           ? window.APP.store.state.preferences.globalMediaVolume
           : 100;
-      this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
+
+      if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
+        this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
+      else
+        this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
     }
   },
 
@@ -546,6 +550,7 @@ AFRAME.registerComponent("media-video", {
       this.setPositionalAudioProperties();
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
+      console.log("setup ambisonics audio!");
       this.audio = new ambisonicsAudioSource(this.el);
 
       // console.log(ambiDecoderConfig);
@@ -563,8 +568,7 @@ AFRAME.registerComponent("media-video", {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
 
-    this.audio.setupConnectDecoder(this.mediaElementAudioSource); 
-    //this.audio.setNodeSource(this.mediaElementAudioSource);
+    this.audio.setupConnectDecoder(this.mediaElementAudioSource);
     this.el.setObject3D("sound", this.audio);
   },
 
@@ -579,7 +583,7 @@ AFRAME.registerComponent("media-video", {
 
     if (this.data.audioType === "ambisonics") {
       this.audio.updatePannerProperties();
-      
+
       if (this.data.loudspeakerSetupUrl)
         this.audio.loadDecoderConfig(this.data.loudspeakerSetupUrl);
     }
@@ -976,7 +980,7 @@ AFRAME.registerComponent("media-video", {
               : 100;
 
           if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
-            this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
+            this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
           else
             this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume * this.distanceBasedAttenuation;
         }

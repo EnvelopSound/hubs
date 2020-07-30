@@ -7,17 +7,11 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.el = mediaEl;
     this.context = this.el.sceneEl.audioListener.context;
     this.audioListener = this.el.sceneEl.audioListener;
-    this.gain = { gain: { value: 1 } };
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.el.object3D.position;
+    this.masterGain = 1;
     console.log("ambisonics: constructing ambisonicsAudioSource!");
-  }
-
-  setNodeSource(newMediaElementAudioSource) {
-    console.log("ambisonics: setNodeSource");
-    // todo: call setNodeSource on each loudspeaker with decoded stream
-   // this.loudspeakers[0].setNodeSource(newMediaElementAudioSource);
   }
 
   disconnect() {
@@ -90,10 +84,16 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     }
   }
 
-  setupConnectDecoder(mediaElementAudioSource) {
+  setMasterGain(newMasterGain) {
+    console.log("ambisonics: set master gain");
+    this.masterGain = newMasterGain;
 
+    for (const ls of this.loudspeakers)
+      ls.gain.gain.value = newMasterGain;
+  }
+
+  setupConnectDecoder(mediaElementAudioSource) {
     console.log("ambisonics: setting up decoder");
-    
     this.decoderNode = new MatrixMultiplier(this.context, this.decoderMatrix);
 
     // connect media to decoder
@@ -104,17 +104,17 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.decoderNode.out.connect(this.outSplit);
 
     // connect the decoder outputs to virtual speakers
-    for (let iSpeaker = 0; iSpeaker < this.numLoudspeakers; iSpeaker++) {
-      this.outSplit.connect(this.loudspeakers[iSpeaker].panner, iSpeaker, 0);
-    }
-
-    // BYPASSES DECODER !
-    //mediaElementAudioSource.connect(this.loudspeakers[0].panner, 0, 0); 
-
+    for (let i = 0; i < this.numLoudspeakers; ++i)
+      this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
   }
 
-  loadDecoderConfig(newDecoderConfig) {
+  loadDecoderConfig(newDecoderConfigUrl) {
     console.log("ambisonics: loadDecoderConfig");
+
+    if (this.decoderConfigUrl === newDecoderConfigUrl)
+      return;
+    
+    this.decoderConfigUrl = newDecoderConfigUrl;
 
     // todo: load json from url (CORS!)
 
