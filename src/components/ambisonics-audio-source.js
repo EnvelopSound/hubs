@@ -1,13 +1,13 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
-import irsMagLs_01to08ch from "../assets/ambisonics/irsMagLs_01-08ch.wav";
-import irsMagLs_09to16ch from "../assets/ambisonics/irsMagLs_09-16ch.wav";
+import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs_01-08ch.wav";
+import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs_09-16ch.wav";
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
-import HOAloader from "../utils/hoa-loader.js";
+import HOALoader from "../utils/hoa-loader.js";
 import BinauralDecoder from "../utils/hoa-decoder.js";
-import monoEncoder from "../utils/ambi-monoEncoder.js";
+import MonoEncoder from "../utils/ambi-monoEncoder.js";
 
-export class ambisonicsAudioSource extends THREE.Object3D {
+export class AmbisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl, order) {
     super();
 
@@ -24,8 +24,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
     this.refDistance = 1;
-    console.log("ambisonics: constructing ambisonicsAudioSource!");
-    this.hrirUrls = [irsMagLs_01to08ch, irsMagLs_09to16ch];
+    this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch];
   }
 
   disconnect() {
@@ -119,14 +118,14 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     // decoding to virtual loudspeakers
     console.log("ambisonics: setting up decoder");
 
-    if (this.decoderExpectedInputNormalization == "n3d"){
+    if (this.decoderExpectedInputNormalization == "n3d") {
       this.decoderMatrix = n3dToSn3dDecoderMatrix(this.decoderMatrix);
     }
 
     this.loudspeakerDecoder = new MatrixMultiplier(this.context, this.decoderMatrix);
     this.loudspeakerDecoderOutSplitter = this.context.createChannelSplitter(this.numLoudspeakers);
     this.binauralDecoder = new BinauralDecoder(this.context, this.order);
-    this.hoaloader = new HOAloader(this.context, this.order, this.hrirUrls, loadedBuffer => {
+    this.hoaloader = new HOALoader(this.context, this.order, this.hrirUrls, loadedBuffer => {
       this.binauralDecoder.updateFilters(loadedBuffer);
     });
     this.hoaloader.load();
@@ -138,7 +137,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     // connect the decoder outputs to virtual loudspeakers
     for (let i = 0; i < this.numLoudspeakers; ++i) {
       const lsp = this.loudspeakers[i];
-      lsp.encoder = new monoEncoder(this.context, this.order);
+      lsp.encoder = new MonoEncoder(this.context, this.order);
       this.loudspeakerDecoderOutSplitter.connect(
         lsp.gain,
         i,

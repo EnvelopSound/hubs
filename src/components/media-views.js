@@ -16,7 +16,7 @@ import { applyPersistentSync } from "../utils/permissions-utils";
 import { refreshMediaMirror, getCurrentMirroredMedia } from "../utils/mirror-utils";
 import { detect } from "detect-browser";
 import semver from "semver";
-import { ambisonicsAudioSource } from "./ambisonics-audio-source.js";
+import { AmbisonicsAudioSource } from "./ambisonics-audio-source.js";
 
 /**
  * Warning! This require statement is fragile!
@@ -555,17 +555,7 @@ AFRAME.registerComponent("media-video", {
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
       const ambisonicsOrder = 3;
-      this.audio = new ambisonicsAudioSource(this.el, ambisonicsOrder);
-
-      // console.log(ambiDecoderConfig);
-      console.log("print video data and element");
-      console.log(this.data);
-      console.log(this.el);
-      // console.log(this.el.object3D.position);
-      // console.log(this.audio);
-      // console.log(this.audio.position);
-      // this.el.object3D.object3DMap has mesh, object3D (name: video), sound
-
+      this.audio = new AmbisonicsAudioSource(this.el, ambisonicsOrder);
       this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
       this.setPositionalAudioProperties();
       if (this.data.loudspeakerSetupUrl) {
