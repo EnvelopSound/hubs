@@ -121,36 +121,23 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
       this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
   }
 
-  loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
-    console.log("ambisonics: loadDecoderConfig");
+  setDistanceBasedAttenuation(newAvatarPosition, newMasterGain) {
+    const positionA = new THREE.Vector3();
 
+    for (const ls of this.loudspeakers) {
+      ls.object3D.getWorldPosition(positionA);
+      const distance = positionA.distanceTo(newAvatarPosition);
+      const distanceBasedAttenuation = Math.min(1, 10 / Math.max(1, distance * distance));
+      ls.gain.gain.value = newMasterGain * distanceBasedAttenuation;
+    }
+  }
+
+  loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
     if (this.decoderConfigUrl === newDecoderConfigUrl)
       return;
 
+    console.log("ambisonics: loadDecoderConfig");
     this.decoderConfigUrl = newDecoderConfigUrl;
-
-    // todo: load json from url (CORS!)
-
-    // let loader = new THREE.FileLoader();
-    // loader.load(
-    //   newDecoderConfig,
-
-    //   // onLoad callback
-    //   function (data) {
-    //     // output the text to the console
-    //     console.log(data)
-    //   },
-
-    //   // onProgress callback
-    //   function (xhr) {
-    //     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    //   },
-
-    //   // onError callback
-    //   function (err) {
-    //     console.error('An error happened');
-    //   }
-    // );
 
     this.decoderConfig = defaultAmbiDecoderConfig;
 

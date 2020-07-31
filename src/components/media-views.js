@@ -480,7 +480,7 @@ AFRAME.registerComponent("media-video", {
           ? window.APP.store.state.preferences.globalMediaVolume
           : 100;
 
-      if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
+      if (this.data.audioType === "ambisonics")
         this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
       else
         this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
@@ -986,10 +986,12 @@ AFRAME.registerComponent("media-video", {
               ? window.APP.store.state.preferences.globalMediaVolume
               : 100;
 
-          if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
-            this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
-          else
+          if (this.data.audioType === "ambisonics") {
+            // do not set distance attenuation on ambisonics ("main") object
+            this.audio.setDistanceBasedAttenuation(positionB, (globalMediaVolume / 100) * this.data.volume);
+          } else {
             this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume * this.distanceBasedAttenuation;
+          }
         }
       }
     };
