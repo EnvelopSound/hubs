@@ -28,6 +28,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   }
 
   disconnect() {
+    // todo!
     console.log("ambisonics: disconnect");
   }
 
@@ -118,7 +119,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     // decoding to virtual loudspeakers
     console.log("ambisonics: setting up decoder");
 
-    if (this.decoderExpectedInputNormalization == "n3d") {
+    if (this.decoderExpectedInputNormalization === "n3d") {
       this.decoderMatrix = n3dToSn3dDecoderMatrix(this.decoderMatrix);
     }
 
@@ -160,14 +161,10 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
 
     console.log("ambisonics: loadDecoderConfig");
     this.decoderConfigUrl = newDecoderConfigUrl;
-
     this.decoderConfig = defaultAmbiDecoderConfig;
-
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
     this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
-
     this.decoderExpectedInputNormalization = this.decoderConfig.Decoder.ExpectedInputNormalization;
-
     this.loudspeakerArrayOffset = newLoudspeakerArrayOffset;
     this.loudspeakerVisible = loudspeakerShouldBeVisible;
 
@@ -223,12 +220,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
         (this.refDistance + this.rolloffFactor * (Math.max(distance, this.refDistance) - this.refDistance));
 
       ls.gain.gain.value = this.masterGain * distanceBasedAttenuation;
-
-      // if (ls === this.loudspeakers[0]) {
-      //   // console.log("azi: " + 180 / Math.PI * (avatarToLoudspeakerDirectionSpherical.theta - avatarLookingDirectionSpherical.theta));
-      //   // console.log("zen: " + -180 / Math.PI * (avatarToLoudspeakerDirectionSpherical.phi - avatarLookingDirectionSpherical.phi));
-      //   console.log(encodingDirection);
-      // }
 
       // Need to update the position on this node if either the listener moves or this node moves,
       // because otherwise there are audio artifacts in Chrome.

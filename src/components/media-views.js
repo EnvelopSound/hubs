@@ -554,8 +554,8 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
-      const ambisonicsOrder = 3;
-      this.audio = new AmbisonicsAudioSource(this.el, ambisonicsOrder);
+      this.data.ambisonicsDecodingOrder = 3; // todo: read from spoke!
+      this.audio = new AmbisonicsAudioSource(this.el, this.data.ambisonicsDecodingOrder);
       this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
       this.setPositionalAudioProperties();
       if (this.data.loudspeakerSetupUrl) {
@@ -569,16 +569,6 @@ AFRAME.registerComponent("media-video", {
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
-
-    // TODO!
-    // this.ambiMode = "directAmbisonics";
-
-    // if (this.ambiMode == "loudspeaker") {
-    //   this.audio.setupConnectLoudspeakerDecoder(this.mediaElementAudioSource);
-    // } else if (this.ambiMode == "directAmbisonics") {
-    //   this.audio.setupConnectBinauralDecoder(this.mediaElementAudioSource);
-    // }
-
     this.el.setObject3D("sound", this.audio);
   },
 
