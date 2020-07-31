@@ -99,12 +99,14 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   }
 
   checkInputOrder() {
-    if (this.loudspeakerDecoder && this.inputStreamOrder) {
-      console.log("receiving ambisonics stream of order " + this.inputStreamOrder);
-      if (this.loudspeakerDecoder.decoderOrder !== this.inputStreamOrder) {
-        console.warn("Warning: DASH stream order and Ambisonics decoding order are not the same!");
-        console.log("decoder order: " + this.loudspeakerDecoder.decoderOrder);
-      }
+    if (
+      this.loudspeakerDecoder &&
+      this.inputStreamOrder &&
+      this.loudspeakerDecoder.decoderOrder !== this.inputStreamOrder
+    ) {
+      console.warn("Warning: DASH stream order and Ambisonics decoding order are not the same!");
+      console.log("decoder order: " + this.loudspeakerDecoder.decoderOrder);
+      console.log("input stream order " + this.inputStreamOrder);
     }
   }
 
@@ -157,6 +159,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       return;
 
     console.log("ambisonics: loadDecoderConfig");
+    console.log(newDecoderConfigUrl);
     this.decoderConfigUrl = newDecoderConfigUrl;
     this.decoderConfig = defaultAmbiDecoderConfig;
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
