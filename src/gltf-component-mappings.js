@@ -231,13 +231,11 @@ async function mediaInflator(el, componentName, componentData, components) {
       mediaOptions.distanceModel = componentData.distanceModel;
       mediaOptions.rolloffFactor = componentData.rolloffFactor;
       mediaOptions.refDistance = componentData.refDistance;
-      mediaOptions.maxDistance = componentData.maxDistance;
-      mediaOptions.coneInnerAngle = componentData.coneInnerAngle;
-      mediaOptions.coneOuterAngle = componentData.coneOuterAngle;
-      mediaOptions.coneOuterGain = componentData.coneOuterGain;
       mediaOptions.loudspeakerSetupUrl = componentData.loudspeakerSetupUrl;
       mediaOptions.loudspeakerVisible = componentData.loudspeakerVisible;
       mediaOptions.loudspeakerArrayOffset = componentData.loudspeakerArrayOffset;
+      mediaOptions.roomSimulationLevel = componentData.roomSimulationLevel;
+      mediaOptions.decodingOrder = componentData.decodingOrder;
     }
 
     el.setAttribute("video-pause-state", { paused: mediaOptions.videoPaused });

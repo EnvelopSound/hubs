@@ -1,7 +1,10 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
-import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs_01-08ch.wav";
-import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs_09-16ch.wav";
+import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs1to8.wav";
+import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs9to16.wav";
+import decodingFilters17to24ch from "../assets/ambisonics/irsMagLs17to24.wav";
+import decodingFilters25ch from "../assets/ambisonics/irsMagLs25.wav";
+
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
 import HOALoader from "../utils/hoa-loader.js";
 import BinauralDecoder from "../utils/hoa-decoder.js";
@@ -24,8 +27,8 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
     this.refDistance = 1;
-    this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch];
     console.log("created new ambisonics audio source with decoding order " + this.finalDecodingOrder);
+    this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch, decodingFilters17to24ch, decodingFilters25ch];
   }
 
   disconnect() {

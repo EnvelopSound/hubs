@@ -261,7 +261,9 @@ AFRAME.registerComponent("media-video", {
     syncTolerance: { default: 2 },
     loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
     loudspeakerVisible: { type: "string", default: true },
-    loudspeakerArrayOffset: { type: "number", default: 10 }
+    loudspeakerArrayOffset: { type: "number", default: 10 },
+    roomSimulationLevel: { type: "number", default: 0 },
+    decodingOrder: { type: "number", default: 4 }
   },
 
   init() {
@@ -554,6 +556,9 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
+      console.log(this.data);
+      console.log(this.data.decodingOrder);
+
       this.data.ambisonicsDecodingOrder = 3; // todo: read from spoke!
       this.audio = new AmbisonicsAudioSource(this.el, this.data.ambisonicsDecodingOrder);
       if (this.numDASHAudioChannels) {
@@ -561,6 +566,7 @@ AFRAME.registerComponent("media-video", {
       }
       this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
       this.setPositionalAudioProperties();
+
       if (this.data.loudspeakerSetupUrl) {
         this.audio.loadDecoderConfig(
           this.data.loudspeakerSetupUrl,
