@@ -2,7 +2,7 @@ import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/matrix-multiplier.js";
 
 export class ambisonicsAudioSource extends THREE.Object3D {
-  constructor(mediaEl) {
+  constructor(mediaEl, order) {
     super();
 
     // create new entity for loudspeaker array and add to scene
@@ -12,6 +12,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.mediaEl = mediaEl; // entity for element containing audio / video player
     this.context = this.mediaEl.sceneEl.audioListener.context;
     this.audioListener = this.mediaEl.sceneEl.audioListener;
+    this.order = order;
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.mediaEl.object3D.position;
@@ -74,14 +75,17 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         this.el.setObject3D(componentString, lspObject);
         // const lspObject = this.el.getObject3D(componentString);
 
+        // set to correct position
         lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x;
         lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y;
         lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z;
 
         lspObject.lookAt(this.arrayCenter);
-        // cube.add(this.loudspeakers[this.numLoudspeakers]);
-
         lspObject.visible = this.loudspeakerVisible;
+
+        // add gain nodes
+        lspObject.gain = this.context.createGain();
+
         this.numLoudspeakers++;
       }
     }
@@ -99,40 +103,40 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   setMasterGain(newMasterGain) {
     console.log("ambisonics: set master gain");
     this.masterGain = newMasterGain;
-
-    // for (const ls of this.loudspeakers)
-    //   ls.gain.gain.value = newMasterGain;
   }
 
-  setupConnectDecoder(mediaElementAudioSource) {
+  setMediaElementAudioSource(newSource) {
+    this.ambisonicsSource = newSource;
+  }
+
+  setupAudioRoutingGraph() {
+    // decoding to virtual loudspeakers
     console.log("ambisonics: setting up decoder");
     this.decoderNode = new MatrixMultiplier(this.context, this.decoderMatrix);
 
     // connect media to decoder
-    mediaElementAudioSource.connect(this.decoderNode.in);
+    this.ambisonicsSource.connect(this.decoderNode.in);
 
-    // split decoder Output
+    // split decoder output
     this.outSplit = this.context.createChannelSplitter(this.numLoudspeakers);
     this.decoderNode.out.connect(this.outSplit);
 
-    // connect the decoder outputs to virtual speakers
-    // for (let i = 0; i < this.numLoudspeakers; ++i)
-    //   this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
+    // connect the decoder outputs to virtual loudspeakers
+    for (let i = 0; i < this.numLoudspeakers; ++i) {
+      const lsp = this.loudspeakers[i];
+      lsp.encoder = new monoEncoder(this.context, this.order);
+      this.outSplit.connect(lsp.gain, i, 0);
+      lsp.gain.connect(lsp.encoder.in);
+      lsp.encoder.out.connect(this.binauralDecoder.in);
+    }
   }
 
-  // setDistanceBasedAttenuation(newAvatarPosition, newMasterGain) {
-  //   const lsPosition = new THREE.Vector3();
-
-  //   for (const ls of this.loudspeakers) {
-  //     ls.getWorldPosition(lsPosition);
-  //     const distance = lsPosition.distanceTo(newAvatarPosition);
-  //     const distanceBasedAttenuation = Math.min(1, 10 / Math.max(1, distance * distance));
-  //     ls.gain.gain.value = newMasterGain * distanceBasedAttenuation;
-  //   }
-  // }
-
   loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
-    if (this.decoderConfigUrl === newDecoderConfigUrl)
+    if (
+      this.decoderConfigUrl === newDecoderConfigUrl &&
+      this.loudspeakerArrayOffset === newLoudspeakerArrayOffset &&
+      this.loudspeakerVisible === loudspeakerShouldBeVisible
+    )
       return;
 
     console.log("ambisonics: loadDecoderConfig");
@@ -157,6 +161,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     );
 
     this.constructLoudspeakers();
+    this.setupAudioRoutingGraph();
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -185,6 +190,8 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         avatarToLoudspeakerDirectionSpherical.theta - avatarLookingDirectionSpherical.theta
       );
 
+      ls.monoEncoder.updateGain(encodingDirection.z, encodingDirection.x, encodingDirection.y);
+
       // todo: use orientation to apply loudspeaker directivity
       // lsOrientation.set(0, 0, 1).applyQuaternion(lsQuaternion);
       const distance = avatarPosition.distanceTo(lsPosition);
@@ -194,11 +201,13 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         this.refDistance /
         (this.refDistance + this.rolloffFactor * (Math.max(distance, this.refDistance) - this.refDistance));
 
-      if (ls === this.loudspeakers[0]) {
-        // console.log("azi: " + 180 / Math.PI * (avatarToLoudspeakerDirectionSpherical.theta - avatarLookingDirectionSpherical.theta));
-        // console.log("zen: " + -180 / Math.PI * (avatarToLoudspeakerDirectionSpherical.phi - avatarLookingDirectionSpherical.phi));
-        console.log(encodingDirection);
-      }
+      ls.gain.gain.value = this.masterGain * distanceBasedAttenuation;
+
+      // if (ls === this.loudspeakers[0]) {
+      //   // console.log("azi: " + 180 / Math.PI * (avatarToLoudspeakerDirectionSpherical.theta - avatarLookingDirectionSpherical.theta));
+      //   // console.log("zen: " + -180 / Math.PI * (avatarToLoudspeakerDirectionSpherical.phi - avatarLookingDirectionSpherical.phi));
+      //   console.log(encodingDirection);
+      // }
 
       // Need to update the position on this node if either the listener moves or this node moves,
       // because otherwise there are audio artifacts in Chrome.
@@ -231,7 +240,6 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       //     this._lastListenerPosition.z = listener.positionZ.value;
       //   }
       // }
-
     }
   }
 }

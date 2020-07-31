@@ -553,7 +553,8 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
-      this.audio = new ambisonicsAudioSource(this.el);
+      const ambisonicsOrder = 3;
+      this.audio = new ambisonicsAudioSource(this.el, ambisonicsOrder);
 
       // console.log(ambiDecoderConfig);
       console.log("print video data and element");
@@ -564,13 +565,19 @@ AFRAME.registerComponent("media-video", {
       // console.log(this.audio.position);
       // this.el.object3D.object3DMap has mesh, object3D (name: video), sound
 
+      this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
       this.setPositionalAudioProperties();
+      if (this.data.loudspeakerSetupUrl) {
+        this.audio.loadDecoderConfig(
+          this.data.loudspeakerSetupUrl,
+          this.data.loudspeakerArrayOffset,
+          this.data.loudspeakerVisible
+        );
+      }
       this.distanceBasedAttenuation = 1;
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
-
-    this.audio.setupConnectDecoder(this.mediaElementAudioSource);
     this.el.setObject3D("sound", this.audio);
   },
 
@@ -583,17 +590,8 @@ AFRAME.registerComponent("media-video", {
     this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
     this.audio.panner.coneOuterGain = this.data.coneOuterGain;
 
-    if (this.data.audioType === "ambisonics") {
+    if (this.data.audioType === "ambisonics")
       this.audio.updatePannerProperties();
-
-      if (this.data.loudspeakerSetupUrl) {
-        this.audio.loadDecoderConfig(
-          this.data.loudspeakerSetupUrl,
-          this.data.loudspeakerArrayOffset,
-          this.data.loudspeakerVisible
-        );
-      }
-    }
   },
 
   async updateSrc(oldData) {

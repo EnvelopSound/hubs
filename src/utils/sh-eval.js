@@ -29,11 +29,8 @@ const sn3dToN3dWeights = [
   3
 ];
 
-export function shEval(order, vec) {
-  const x = vec.x;
-  const y = vec.y;
-  const z = vec.z;
-
+export function shEval(order, x, y, z) {
+  // this uses a coordinate system as commonly used in ambisonics: +x front, +y left, +z up
   const ysh = new Array((order + 1) * (order + 1));
 
   ysh[0] = 0.2821;
@@ -70,10 +67,9 @@ export function shEval(order, vec) {
     ysh[22] = 0.4731 * (x * x - y * y) * (7 * z * z - 1);
     ysh[23] = 1.7701 * (x * x - 3 * y * y) * x * z;
     ysh[24] = 0.6258 * (x * x * (x * x - 3 * y * y) - y * y * (3 * x * x - y * y));
-
   }
 
-  return ysh; 
+  return ysh;
 }
 
 export function sn3dToN3d(ysh) {
@@ -96,7 +92,6 @@ export function n3dToSn3d(ysh) {
 
 export function n3dToSn3dDecoderMatrix(decoderMatrix) {
   // converts a decoder matrix that expects n3d to expect sn3d
-
   const order = Math.sqrt(decoderMatrix[0].length) - 1;
 
   for (let iSpeaker = 0; iSpeaker < decoderMatrix.length; iSpeaker++) {
