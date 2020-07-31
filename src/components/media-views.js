@@ -570,7 +570,14 @@ AFRAME.registerComponent("media-video", {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
 
-    this.audio.setupConnectDecoder(this.mediaElementAudioSource);
+    this.ambiMode = "directAmbisonics";
+
+    if (this.ambiMode == "loudspeaker") {
+      this.audio.setupConnectLoudspeakerDecoder(this.mediaElementAudioSource);
+    } else if (this.ambiMode == "directAmbisonics") {
+      this.audio.setupConnectBinauralDecoder(this.mediaElementAudioSource);
+    }
+
     this.el.setObject3D("sound", this.audio);
   },
 
