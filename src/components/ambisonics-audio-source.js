@@ -1,9 +1,9 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/matrix-multiplier.js";
 
-export class ambisonicsAudioSource extends THREE.PositionalAudio {
+export class ambisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl) {
-    super(mediaEl.sceneEl.audioListener);
+    super();
 
     // create new entity for loudspeaker array and add to scene
     this.el = document.createElement("a-entity"); // entity for loudspeaker array
@@ -12,9 +12,11 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
     this.mediaEl = mediaEl; // entity for element containing audio / video player
     this.context = this.mediaEl.sceneEl.audioListener.context;
     this.audioListener = this.mediaEl.sceneEl.audioListener;
+    this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
+    this.refDistance = 1;
     console.log("ambisonics: constructing ambisonicsAudioSource!");
   }
 
@@ -23,23 +25,21 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
   }
 
   setDistanceModel(newDistanceModel) {
-    for (const ls of this.loudspeakers)
-      ls.distanceModel = newDistanceModel;
+    // todo: unused
+    this.distanceModel = newDistanceModel;
   }
 
   setRolloffFactor(newRolloffFactor) {
-    for (const ls of this.loudspeakers)
-      ls.rolloffFactor = newRolloffFactor;
+    this.rolloffFactor = newRolloffFactor;
   }
 
   setRefDistance(newRefDistance) {
-    for (const ls of this.loudspeakers)
-      ls.refDistance = newRefDistance;
+    this.refDistance = newRefDistance;
   }
 
   setMaxDistance(newMaxDistance) {
-    for (const ls of this.loudspeakers)
-      ls.maxDistance = newMaxDistance;
+    // todo: unused
+    this.maxDistance = newMaxDistance;
   }
 
   constructLoudspeakers() {
@@ -57,12 +57,11 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
     this.numLoudspeakers = 0;
     for (const lsp of this.LoudspeakerLayout) {
       if (!lsp.IsImaginary) {
-        this.loudspeakers.push(new THREE.PositionalAudio(this.audioListener));
-
         // create threejs mesh objects as loudspeakers
-        const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        const material = new THREE.MeshNormalMaterial({ Color: 0x675d50 });
-        const cube = new THREE.Mesh(geometry, material);
+        const geometry = new THREE.BoxGeometry(0.3, 0.6, 0.4);
+        const material = new THREE.MeshNormalMaterial();
+        const lspObject = new THREE.Mesh(geometry, material);
+        this.loudspeakers.push(lspObject);
 
         const componentString = "ls" + this.numLoudspeakers;
         const positionCartesian = new THREE.Vector3();
@@ -72,17 +71,17 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
           THREE.Math.degToRad(lsp.Azimuth)
         );
 
-        this.el.setObject3D(componentString, cube);
-        const lspObject = this.el.getObject3D(componentString);
+        this.el.setObject3D(componentString, lspObject);
+        // const lspObject = this.el.getObject3D(componentString);
 
         lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x;
         lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y;
         lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z;
 
         lspObject.lookAt(this.arrayCenter);
-        cube.add(this.loudspeakers[this.numLoudspeakers]);
+        // cube.add(this.loudspeakers[this.numLoudspeakers]);
 
-        cube.visible = this.loudspeakerVisible;
+        lspObject.visible = this.loudspeakerVisible;
         this.numLoudspeakers++;
       }
     }
@@ -101,8 +100,8 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
     console.log("ambisonics: set master gain");
     this.masterGain = newMasterGain;
 
-    for (const ls of this.loudspeakers)
-      ls.gain.gain.value = newMasterGain;
+    // for (const ls of this.loudspeakers)
+    //   ls.gain.gain.value = newMasterGain;
   }
 
   setupConnectDecoder(mediaElementAudioSource) {
@@ -117,20 +116,20 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
     this.decoderNode.out.connect(this.outSplit);
 
     // connect the decoder outputs to virtual speakers
-    for (let i = 0; i < this.numLoudspeakers; ++i)
-      this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
+    // for (let i = 0; i < this.numLoudspeakers; ++i)
+    //   this.outSplit.connect(this.loudspeakers[i].panner, i, 0);
   }
 
-  setDistanceBasedAttenuation(newAvatarPosition, newMasterGain) {
-    const positionA = new THREE.Vector3();
+  // setDistanceBasedAttenuation(newAvatarPosition, newMasterGain) {
+  //   const lsPosition = new THREE.Vector3();
 
-    for (const ls of this.loudspeakers) {
-      ls.object3D.getWorldPosition(positionA);
-      const distance = positionA.distanceTo(newAvatarPosition);
-      const distanceBasedAttenuation = Math.min(1, 10 / Math.max(1, distance * distance));
-      ls.gain.gain.value = newMasterGain * distanceBasedAttenuation;
-    }
-  }
+  //   for (const ls of this.loudspeakers) {
+  //     ls.getWorldPosition(lsPosition);
+  //     const distance = lsPosition.distanceTo(newAvatarPosition);
+  //     const distanceBasedAttenuation = Math.min(1, 10 / Math.max(1, distance * distance));
+  //     ls.gain.gain.value = newMasterGain * distanceBasedAttenuation;
+  //   }
+  // }
 
   loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
     if (this.decoderConfigUrl === newDecoderConfigUrl)
@@ -158,5 +157,26 @@ export class ambisonicsAudioSource extends THREE.PositionalAudio {
     );
 
     this.constructLoudspeakers();
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  updateMatrixWorld(_force) {
+    const lsPosition = new THREE.Vector3();
+    const lsQuaternion = new THREE.Quaternion();
+    const lsScale = new THREE.Vector3();
+    const lsOrientation = new THREE.Vector3();
+    const avatarPosition = new THREE.Vector3();
+    this.mediaEl.sceneEl.camera.getWorldPosition(avatarPosition);
+
+    for (const ls of this.loudspeakers) {
+      ls.matrixWorld.decompose(lsPosition, lsQuaternion, lsScale);
+      lsOrientation.set(0, 0, 1).applyQuaternion(lsQuaternion);
+      const distance = avatarPosition.distanceTo(lsPosition);
+
+      // use inverse distance law, implementation as in Firefox PannerNode
+      const distanceBasedAttenuation =
+        this.refDistance /
+        (this.refDistance + this.rolloffFactor * (Math.max(distance, this.refDistance) - this.refDistance));
+    }
   }
 }
