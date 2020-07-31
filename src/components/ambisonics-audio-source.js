@@ -1,5 +1,5 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
-import MatrixMultiplier from "../utils/matrix-multiplier.js";
+import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
 import irsMagLs_01to08ch from "../assets/ambisonics/irsMagLs_01-08ch.wav";
 import irsMagLs_09to16ch from "../assets/ambisonics/irsMagLs_09-16ch.wav";
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
@@ -53,8 +53,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   constructLoudspeakers() {
     console.log("ambisonics: constructLoudspeakers");
 
-    if (!this.LoudspeakerLayout)
-      console.error('no loudspeaker setup available!');
+    if (!this.LoudspeakerLayout) console.error("no loudspeaker setup available!");
 
     this.arrayCenter = this.mediaEl.object3D.position;
     this.arrayCenter.x += this.loudspeakerArrayOffsetVector.x;
@@ -140,7 +139,11 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     for (let i = 0; i < this.numLoudspeakers; ++i) {
       const lsp = this.loudspeakers[i];
       lsp.encoder = new monoEncoder(this.context, this.order);
-      this.loudspeakerDecoderOutSplitter.connect(lsp.gain, i, 0);
+      this.loudspeakerDecoderOutSplitter.connect(
+        lsp.gain,
+        i,
+        0
+      );
       lsp.gain.connect(lsp.encoder.in);
       lsp.encoder.out.connect(this.binauralDecoder.in);
     }

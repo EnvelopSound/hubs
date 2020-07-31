@@ -163,7 +163,7 @@ function disposeTexture(texture) {
 
   texture.dispose();
 }
-2
+
 class TextureCache {
   cache = new Map();
 
@@ -261,7 +261,7 @@ AFRAME.registerComponent("media-video", {
     syncTolerance: { default: 2 },
     loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
     loudspeakerVisible: { type: "string", default: true },
-    loudspeakerArrayOffset: { type: "number", default: 10}
+    loudspeakerArrayOffset: { type: "number", default: 10 }
   },
 
   init() {
@@ -480,10 +480,11 @@ AFRAME.registerComponent("media-video", {
           ? window.APP.store.state.preferences.globalMediaVolume
           : 100;
 
-      if (this.data.audioType === "ambisonics")
+      if (this.data.audioType === "ambisonics") {
         this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
-      else
+      } else {
         this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
+      }
     }
   },
 
@@ -600,8 +601,7 @@ AFRAME.registerComponent("media-video", {
     this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
     this.audio.panner.coneOuterGain = this.data.coneOuterGain;
 
-    if (this.data.audioType === "ambisonics")
-      this.audio.updatePannerProperties();
+    if (this.data.audioType === "ambisonics") this.audio.updatePannerProperties();
   },
 
   async updateSrc(oldData) {
