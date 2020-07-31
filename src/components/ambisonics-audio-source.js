@@ -1,5 +1,11 @@
 import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
 import MatrixMultiplier from "../utils/matrix-multiplier.js";
+import irsMagLs_01to08ch from "../assets/ambisonics/irsMagLs_01-08ch.wav";
+import irsMagLs_09to16ch from "../assets/ambisonics/irsMagLs_09-16ch.wav";
+import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
+import HOAloader from "../utils/hoa-loader.js";
+import BinauralDecoder from "../utils/hoa-decoder.js";
+import monoEncoder from "../utils/ambi-monoEncoder.js";
 
 export class ambisonicsAudioSource extends THREE.Object3D {
   constructor(mediaEl, order) {
@@ -19,6 +25,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
     this.masterGain = 1;
     this.refDistance = 1;
     console.log("ambisonics: constructing ambisonicsAudioSource!");
+    this.hrirUrls = [irsMagLs_01to08ch, irsMagLs_09to16ch];
   }
 
   disconnect() {
@@ -112,23 +119,33 @@ export class ambisonicsAudioSource extends THREE.Object3D {
   setupAudioRoutingGraph() {
     // decoding to virtual loudspeakers
     console.log("ambisonics: setting up decoder");
-    this.decoderNode = new MatrixMultiplier(this.context, this.decoderMatrix);
+
+    if (this.decoderExpectedInputNormalization == "n3d"){
+      this.decoderMatrix = n3dToSn3dDecoderMatrix(this.decoderMatrix);
+    }
+
+    this.loudspeakerDecoder = new MatrixMultiplier(this.context, this.decoderMatrix);
+    this.loudspeakerDecoderOutSplitter = this.context.createChannelSplitter(this.numLoudspeakers);
+    this.binauralDecoder = new BinauralDecoder(this.context, this.order);
+    this.hoaloader = new HOAloader(this.context, this.order, this.hrirUrls, loadedBuffer => {
+      this.binauralDecoder.updateFilters(loadedBuffer);
+    });
+    this.hoaloader.load();
 
     // connect media to decoder
-    this.ambisonicsSource.connect(this.decoderNode.in);
-
-    // split decoder output
-    this.outSplit = this.context.createChannelSplitter(this.numLoudspeakers);
-    this.decoderNode.out.connect(this.outSplit);
+    this.ambisonicsSource.connect(this.loudspeakerDecoder.in);
+    this.loudspeakerDecoder.out.connect(this.loudspeakerDecoderOutSplitter);
 
     // connect the decoder outputs to virtual loudspeakers
     for (let i = 0; i < this.numLoudspeakers; ++i) {
       const lsp = this.loudspeakers[i];
       lsp.encoder = new monoEncoder(this.context, this.order);
-      this.outSplit.connect(lsp.gain, i, 0);
+      this.loudspeakerDecoderOutSplitter.connect(lsp.gain, i, 0);
       lsp.gain.connect(lsp.encoder.in);
       lsp.encoder.out.connect(this.binauralDecoder.in);
     }
+
+    this.binauralDecoder.out.connect(this.context.destination);
   }
 
   loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
@@ -146,6 +163,8 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
     this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
+
+    this.decoderExpectedInputNormalization = this.decoderConfig.Decoder.ExpectedInputNormalization;
 
     this.loudspeakerArrayOffset = newLoudspeakerArrayOffset;
     this.loudspeakerVisible = loudspeakerShouldBeVisible;
@@ -190,7 +209,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
         avatarToLoudspeakerDirectionSpherical.theta - avatarLookingDirectionSpherical.theta
       );
 
-      ls.monoEncoder.updateGain(encodingDirection.z, encodingDirection.x, encodingDirection.y);
+      ls.encoder.updateGains(encodingDirection.z, encodingDirection.x, encodingDirection.y);
 
       // todo: use orientation to apply loudspeaker directivity
       // lsOrientation.set(0, 0, 1).applyQuaternion(lsQuaternion);

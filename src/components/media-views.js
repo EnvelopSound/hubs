@@ -578,6 +578,16 @@ AFRAME.registerComponent("media-video", {
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
+
+    // TODO!
+    // this.ambiMode = "directAmbisonics";
+
+    // if (this.ambiMode == "loudspeaker") {
+    //   this.audio.setupConnectLoudspeakerDecoder(this.mediaElementAudioSource);
+    // } else if (this.ambiMode == "directAmbisonics") {
+    //   this.audio.setupConnectBinauralDecoder(this.mediaElementAudioSource);
+    // }
+
     this.el.setObject3D("sound", this.audio);
   },
 

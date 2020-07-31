@@ -19,7 +19,7 @@
 /////////////////
 /* HOA ENCODER */
 /////////////////
-import { shEval } from "sh-eval.js";
+import { shEval } from "./sh-eval.js";
 
 export default class monoEncoder {
   constructor(audioCtx, order) {
@@ -28,7 +28,6 @@ export default class monoEncoder {
     this.ctx = audioCtx;
     this.order = order;
     this.nCh = (order + 1) * (order + 1);
-    this.gains = new Array(this.nCh);
     this.gainNodes = new Array(this.nCh);
     this.in = this.ctx.createGain();
     this.in.channelCountMode = "explicit";
@@ -40,7 +39,7 @@ export default class monoEncoder {
       this.gainNodes[i].channelCountMode = "explicit";
       this.gainNodes[i].channelCount = 1;
     }
-    this.updateGains();
+    this.updateGains(1, 0, 0);
     // Make audio connections
     for (let i = 0; i < this.nCh; i++) {
       this.in.connect(this.gainNodes[i]);
@@ -58,8 +57,7 @@ export default class monoEncoder {
     const g_enc = shEval(this.order, newX, newY, newZ);
 
     for (let i = 0; i < this.nCh; i++) {
-      this.gains[i] = g_enc[i];
-      this.gainNodes[i].gain.value = this.gains[i];
+      this.gainNodes[i].gain.value = g_enc[i];
     }
   }
 }
