@@ -18,23 +18,19 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.mediaEl = mediaEl; // entity for element containing audio / video player
     this.context = this.mediaEl.sceneEl.audioListener.context;
     this.audioListener = this.mediaEl.sceneEl.audioListener;
-    this.order = order;
+    this.finalDecodingOrder = order;
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
     this.refDistance = 1;
     this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch];
+    console.log("created new ambisonics audio source with decoding order " + this.finalDecodingOrder);
   }
 
   disconnect() {
     // todo!
     console.log("ambisonics: disconnect");
-  }
-
-  setDistanceModel(newDistanceModel) {
-    // todo: unused
-    this.distanceModel = newDistanceModel;
   }
 
   setRolloffFactor(newRolloffFactor) {
@@ -43,11 +39,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
 
   setRefDistance(newRefDistance) {
     this.refDistance = newRefDistance;
-  }
-
-  setMaxDistance(newMaxDistance) {
-    // todo: unused
-    this.maxDistance = newMaxDistance;
   }
 
   constructLoudspeakers() {
@@ -97,18 +88,24 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     }
   }
 
-  updatePannerProperties() {
-    console.log("ambsionics: updatePannerProperties");
-    for (const ls of this.loudspeakers) {
-      ls.panner.coneInnerAngle = this.panner.coneInnerAngle;
-      ls.panner.coneOuterAngle = this.panner.coneOuterAngle;
-      ls.panner.coneOuterGain = this.panner.coneOuterGain;
-    }
-  }
-
   setMasterGain(newMasterGain) {
     console.log("ambisonics: set master gain");
     this.masterGain = newMasterGain;
+  }
+
+  setInputOrder(newInputOrder) {
+    this.inputStreamOrder = newInputOrder;
+    this.checkInputOrder();
+  }
+
+  checkInputOrder() {
+    if (this.loudspeakerDecoder && this.inputStreamOrder) {
+      console.log("receiving ambisonics stream of order " + this.inputStreamOrder);
+      if (this.loudspeakerDecoder.decoderOrder !== this.inputStreamOrder) {
+        console.warn("Warning: DASH stream order and Ambisonics decoding order are not the same!");
+        console.log("decoder order: " + this.loudspeakerDecoder.decoderOrder);
+      }
+    }
   }
 
   setMediaElementAudioSource(newSource) {
@@ -125,8 +122,8 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
 
     this.loudspeakerDecoder = new MatrixMultiplier(this.context, this.decoderMatrix);
     this.loudspeakerDecoderOutSplitter = this.context.createChannelSplitter(this.numLoudspeakers);
-    this.binauralDecoder = new BinauralDecoder(this.context, this.order);
-    this.hoaloader = new HOALoader(this.context, this.order, this.hrirUrls, loadedBuffer => {
+    this.binauralDecoder = new BinauralDecoder(this.context, this.finalDecodingOrder);
+    this.hoaloader = new HOALoader(this.context, this.finalDecodingOrder, this.hrirUrls, loadedBuffer => {
       this.binauralDecoder.updateFilters(loadedBuffer);
     });
     this.hoaloader.load();
@@ -138,7 +135,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     // connect the decoder outputs to virtual loudspeakers
     for (let i = 0; i < this.numLoudspeakers; ++i) {
       const lsp = this.loudspeakers[i];
-      lsp.encoder = new MonoEncoder(this.context, this.order);
+      lsp.encoder = new MonoEncoder(this.context, this.finalDecodingOrder);
       this.loudspeakerDecoderOutSplitter.connect(
         lsp.gain,
         i,

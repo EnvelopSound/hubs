@@ -556,6 +556,9 @@ AFRAME.registerComponent("media-video", {
       console.log("setup ambisonics audio!");
       this.data.ambisonicsDecodingOrder = 3; // todo: read from spoke!
       this.audio = new AmbisonicsAudioSource(this.el, this.data.ambisonicsDecodingOrder);
+      if (this.numDASHAudioChannels) {
+        this.audio.setInputOrder(Math.sqrt(this.numDASHAudioChannels) - 1);
+      }
       this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
       this.setPositionalAudioProperties();
       if (this.data.loudspeakerSetupUrl) {
@@ -573,15 +576,16 @@ AFRAME.registerComponent("media-video", {
   },
 
   setPositionalAudioProperties() {
-    this.audio.setDistanceModel(this.data.distanceModel);
     this.audio.setRolloffFactor(this.data.rolloffFactor);
     this.audio.setRefDistance(this.data.refDistance);
-    this.audio.setMaxDistance(this.data.maxDistance);
-    this.audio.panner.coneInnerAngle = this.data.coneInnerAngle;
-    this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
-    this.audio.panner.coneOuterGain = this.data.coneOuterGain;
 
-    if (this.data.audioType === "ambisonics") this.audio.updatePannerProperties();
+    if (this.data.audioType !== "ambisonics") {
+      this.audio.setDistanceModel(this.data.distanceModel);
+      this.audio.setMaxDistance(this.data.maxDistance);
+      this.audio.panner.coneInnerAngle = this.data.coneInnerAngle;
+      this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
+      this.audio.panner.coneOuterGain = this.data.coneOuterGain;
+    }
   },
 
   async updateSrc(oldData) {
@@ -775,6 +779,18 @@ AFRAME.registerComponent("media-video", {
         // dashPlayer.addUTCTimingSource("urn:mpeg:dash:utc:http-head:2014", location.href);
 
         texture.dash = dashPlayer;
+
+        if (this.data.audioType === "ambisonics") {
+          const scope = this;
+          dashPlayer.on(MediaPlayer.events.MANIFEST_LOADED, event => {
+            const data = event.data;
+            const audioAdaptionSet = data.Period.AdaptationSet_asArray.find(elem => elem.contentType === "audio");
+            scope.numDASHAudioChannels = audioAdaptionSet.Representation.AudioChannelConfiguration.value;
+            if (scope.audio) {
+              scope.audio.setInputOrder(Math.sqrt(scope.numDASHAudioChannels) - 1);
+            }
+          });
+        }
       } else if (AFRAME.utils.material.isHLS(url, contentType)) {
         if (HLS.isSupported()) {
           const corsProxyPrefix = `https://${configs.CORS_PROXY_SERVER}/`;

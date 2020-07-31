@@ -8,6 +8,7 @@ export default class MatrixMultiplier {
     this.nChOut = decoderMatrix.length;
     this.nChIn = decoderMatrix[0].length;
     this.mtx = decoderMatrix;
+    this.decoderOrder = Math.sqrt(this.nChIn) - 1;
 
     // Input and output nodes
     this.in = this.ctx.createChannelSplitter(this.nChIn);
