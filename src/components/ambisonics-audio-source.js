@@ -205,7 +205,7 @@ export class ambisonicsAudioSource extends THREE.Object3D {
       avatarToLoudspeakerDirectionSpherical.setFromVector3(avatarToLoudspeakerDirectionCartesian);
       encodingDirection.setFromSphericalCoords(
         1,
-        avatarToLoudspeakerDirectionSpherical.phi - avatarLookingDirectionSpherical.phi,
+        avatarToLoudspeakerDirectionSpherical.phi - avatarLookingDirectionSpherical.phi + Math.PI / 2,
         avatarToLoudspeakerDirectionSpherical.theta - avatarLookingDirectionSpherical.theta
       );
 
@@ -213,8 +213,8 @@ export class ambisonicsAudioSource extends THREE.Object3D {
 
       // todo: use orientation to apply loudspeaker directivity
       // lsOrientation.set(0, 0, 1).applyQuaternion(lsQuaternion);
-      const distance = avatarPosition.distanceTo(lsPosition);
 
+      const distance = avatarPosition.distanceTo(lsPosition);
       // use inverse distance law, implementation as in Firefox PannerNode
       const distanceBasedAttenuation =
         this.refDistance /
