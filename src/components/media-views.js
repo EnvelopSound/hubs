@@ -557,8 +557,7 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
-      this.data.ambisonicsDecodingOrder = 3; // todo: read from spoke!
-      this.audio = new AmbisonicsAudioSource(this.el, this.data.ambisonicsDecodingOrder);
+      this.audio = new AmbisonicsAudioSource(this.el, this.data.decodingOrder);
       if (this.numDASHAudioChannels) {
         this.audio.setInputOrder(Math.sqrt(this.numDASHAudioChannels) - 1);
       }
