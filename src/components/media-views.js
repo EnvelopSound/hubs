@@ -263,7 +263,8 @@ AFRAME.registerComponent("media-video", {
     loudspeakerVisible: { type: "string", default: true },
     loudspeakerArrayOffset: { type: "number", default: 0 },
     roomSimulationLevel: { type: "number", default: 0 },
-    decodingOrder: { type: "number", default: 3 }
+    decodingOrder: { type: "number", default: 3 },
+    componentName: { type: "string" }
   },
 
   init() {
@@ -556,9 +557,6 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
-      console.log(this.data);
-      console.log(this.data.decodingOrder);
-
       this.data.ambisonicsDecodingOrder = 3; // todo: read from spoke!
       this.audio = new AmbisonicsAudioSource(this.el, this.data.ambisonicsDecodingOrder);
       if (this.numDASHAudioChannels) {
@@ -705,7 +703,7 @@ AFRAME.registerComponent("media-video", {
       this.el.setObject3D("mesh", this.mesh);
     }
 
-    if (this.data.contentType.startsWith("audio/")) {
+    if (this.data.contentType.startsWith("audio/") || this.data.componentName === "audio") {
       this.mesh.material.map = audioIconTexture;
     } else {
       this.mesh.material.map = texture;
