@@ -3,12 +3,9 @@ import grazArrayXL from "../assets/ambisonics/grazArrayXL.json";
 import envelopSF from "../assets/ambisonics/envelopSF.json";
 import envelopSFXL from "../assets/ambisonics/envelopSFXL.json";
 import ico from "../assets/ambisonics/ico.json";
-
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
-
 import { decodingFilterUrls } from "../utils/import-decoding-filters.js";
-import brir from "../assets/ambisonics/brir_no_direct8192.wav";
-
+import brir from "../assets/ambisonics/brir_hp_no_direct8192.wav";
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
 import HOALoader from "../utils/hoa-loader.js";
 import BinauralDecoder from "../utils/hoa-decoder.js";
