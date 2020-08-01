@@ -1,6 +1,7 @@
 import grazArray from "../assets/ambisonics/grazArray.json";
 import grazArrayXL from "../assets/ambisonics/grazArrayXL.json";
-import envelopeSF from "../assets/ambisonics/envelopeSF.json";
+import envelopSF from "../assets/ambisonics/envelopSF.json";
+import envelopSFXL from "../assets/ambisonics/envelopSFXL.json";
 import ico from "../assets/ambisonics/ico.json";
 
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
@@ -80,9 +81,9 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
         // const lspObject = this.el.getObject3D(componentString);
 
         // set to correct position
-        lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x + this.arrayCenter.x;
-        lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y + this.arrayCenter.y;
-        lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z + this.arrayCenter.z;
+        lspObject.position.x = positionCartesian.x + this.arrayCenter.x;
+        lspObject.position.y = positionCartesian.y + this.arrayCenter.y;
+        lspObject.position.z = positionCartesian.z + this.arrayCenter.z;
 
         lspObject.lookAt(this.arrayCenter);
         lspObject.visible = this.loudspeakerVisible;
@@ -197,8 +198,10 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       this.decoderConfig = grazArray;
     } else if (newDecoderConfig == "grazArrayXL") {
       this.decoderConfig = grazArrayXL;
-    } else if (newDecoderConfig == "envelopeSF") {
-      this.decoderConfig = envelopeSF;
+    } else if (newDecoderConfig == "envelopSF") {
+      this.decoderConfig = envelopSF;
+    } else if (newDecoderConfig == "envelopSFXL") {
+      this.decoderConfig = envelopSFXL;
     } else if (newDecoderConfig == "ico") {
       this.decoderConfig = ico;
     } else if (newDecoderConfig == "default") {
