@@ -29,7 +29,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.masterGain = 1;
     this.refDistance = 1;
     this.roomSimulationLevel = 1;
-    console.log("created new ambisonics audio source with binaural decoding order " + this.binauralDecodingOrder);
+    console.log("Created new ambisonics audio source with binaural decoding order " + this.binauralDecodingOrder);
     this.decodingFilterUrls = decodingFilterUrls;
   }
 
@@ -47,8 +47,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   }
 
   constructLoudspeakers() {
-    console.log("ambisonics: constructLoudspeakers");
-
     if (!this.LoudspeakerLayout) console.error("no loudspeaker setup available!");
 
     this.arrayCenter = this.mediaEl.object3D.position;
@@ -96,7 +94,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   }
 
   setMasterGain(newMasterGain) {
-    console.log("ambisonics: set master gain");
     this.masterGain = newMasterGain;
     if (this.gainOut) {
       this.gainOut.gain.value = this.masterGain;
@@ -132,9 +129,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   }
 
   setupAudioRoutingGraph() {
-    // decoding to virtual loudspeakers
-    console.log("ambisonics: setting up decoder");
-
     if (this.decoderExpectedInputNormalization === "n3d") {
       this.decoderMatrix = n3dToSn3dDecoderMatrix(this.decoderMatrix);
     }
@@ -231,7 +225,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     const response = await fetch(brir);
     const arrayBuffer = await response.arrayBuffer();
     this.brirConvolver.buffer = await this.context.decodeAudioData(arrayBuffer);
-    console.log("ambisonics: loaded brir");
   }
 
   // eslint-disable-next-line no-unused-vars
