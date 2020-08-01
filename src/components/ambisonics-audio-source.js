@@ -34,8 +34,8 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   }
 
   disconnect() {
-    // todo!
-    console.log("ambisonics: disconnect");
+    this.el.parentNode.removeChild(this.el);
+    this.el.destroy();
   }
 
   setRolloffFactor(newRolloffFactor) {
