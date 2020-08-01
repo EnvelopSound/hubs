@@ -99,6 +99,9 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
   setMasterGain(newMasterGain) {
     console.log("ambisonics: set master gain");
     this.masterGain = newMasterGain;
+    if (this.gainOut) {
+      this.gainOut.gain.value = this.masterGain;
+    }
   }
 
   setInputOrder(newInputOrder) {
@@ -137,6 +140,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       this.decoderMatrix = n3dToSn3dDecoderMatrix(this.decoderMatrix);
     }
 
+    this.gainOut = this.context.createGain();
     this.loudspeakerDecoder = new MatrixMultiplier(this.context, this.decoderMatrix);
     this.loudspeakerDecoderOutSplitter = this.context.createChannelSplitter(this.numLoudspeakers);
     this.binauralDecoder = new BinauralDecoder(this.context, this.binauralDecodingOrder);
@@ -162,7 +166,8 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       lsp.encoder.out.connect(this.binauralDecoder.in);
     }
 
-    this.binauralDecoder.out.connect(this.context.destination);
+    this.gainOut.gain.value = this.masterGain;
+    this.binauralDecoder.out.connect(this.gainOut);
 
     // add additional BRIR path
     this.brirConvolver = this.context.createConvolver();
@@ -176,7 +181,9 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       0
     ); // connect only W channel
     this.roomGain.connect(this.brirConvolver);
-    this.brirConvolver.connect(this.context.destination);
+    this.brirConvolver.connect(this.gainOut);
+
+    this.gainOut.connect(this.context.destination);
   }
 
   loadDecoderConfig(newDecoderConfig, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
@@ -257,7 +264,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
         this.refDistance /
         (this.refDistance + this.rolloffFactor * (Math.max(distance, this.refDistance) - this.refDistance));
 
-      ls.gain.gain.value = this.masterGain * distanceBasedAttenuation;
+      ls.gain.gain.value = distanceBasedAttenuation;
 
       // Need to update the position on this node if either the listener moves or this node moves,
       // because otherwise there are audio artifacts in Chrome.
