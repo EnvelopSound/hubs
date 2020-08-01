@@ -8,7 +8,7 @@ import decodingFiltersOrder1ch1to08 from "../assets/ambisonics/irsMagLs_o1_ch_1t
 import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs9to16.wav";
 import decodingFilters17to24ch from "../assets/ambisonics/irsMagLs17to24.wav";
 import decodingFilters25ch from "../assets/ambisonics/irsMagLs25.wav";
-import brir from "../assets/ambisonics/brir_no_direct8192.wav";
+import brir from "../assets/ambisonics/brir_hp_no_direct8192.wav";
 
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
 import HOALoader from "../utils/hoa-loader.js";
