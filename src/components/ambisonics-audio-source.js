@@ -1,6 +1,7 @@
 import cube from "../assets/ambisonics/cube.json";
 import cubeXL from "../assets/ambisonics/cubeXL.json";
 import envelopeSF from "../assets/ambisonics/envelopeSF.json";
+//import icosehedral from "../assets/ambisonics/icosahedral.json";
 
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
 import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs1to8.wav";
@@ -81,9 +82,9 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
         // const lspObject = this.el.getObject3D(componentString);
 
         // set to correct position
-        lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x;
-        lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y;
-        lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z;
+        lspObject.position.x = positionCartesian.x + this.loudspeakerArrayOffsetVector.x + this.arrayCenter.x;
+        lspObject.position.y = positionCartesian.y + this.loudspeakerArrayOffsetVector.y + this.arrayCenter.y;
+        lspObject.position.z = positionCartesian.z + this.loudspeakerArrayOffsetVector.z + this.arrayCenter.z;
 
         lspObject.lookAt(this.arrayCenter);
         lspObject.visible = this.loudspeakerVisible;
@@ -196,6 +197,10 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
 
     if (newDecoderConfig == "cube") {
       this.decoderConfig = cube;
+    } else if (newDecoderConfig == "cubeXL") {
+      this.decoderConfig = cubeXL;
+    } else if (newDecoderConfig == "icosehedral") {
+      this.decoderConfig = icosehedral;
     } else if (newDecoderConfig == "envelopeSF") {
       this.decoderConfig = envelopeSF;
     }
