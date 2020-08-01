@@ -69,7 +69,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
         positionCartesian.setFromSphericalCoords(
           lsp.Radius,
           Math.PI / 2 - THREE.Math.degToRad(lsp.Elevation),
-          THREE.Math.degToRad(lsp.Azimuth)
+          THREE.Math.degToRad(lsp.Azimuth) + Math.PI // add pi because video screen looks in +z direction
         );
 
         this.el.setObject3D(componentString, lspObject);
@@ -162,6 +162,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       return;
 
     console.log("ambisonics: loadDecoderConfig");
+    console.log(newLoudspeakerArrayOffset);
     console.log(newDecoderConfigUrl);
     this.decoderConfigUrl = newDecoderConfigUrl;
     this.decoderConfig = defaultAmbiDecoderConfig;

@@ -261,9 +261,9 @@ AFRAME.registerComponent("media-video", {
     syncTolerance: { default: 2 },
     loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
     loudspeakerVisible: { type: "string", default: true },
-    loudspeakerArrayOffset: { type: "number", default: 10 },
+    loudspeakerArrayOffset: { type: "number", default: 0 },
     roomSimulationLevel: { type: "number", default: 0 },
-    decodingOrder: { type: "number", default: 4 }
+    decodingOrder: { type: "number", default: 3 }
   },
 
   init() {
