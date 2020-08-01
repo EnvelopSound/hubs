@@ -1,10 +1,10 @@
-import cube from "../assets/ambisonics/cube.json";
-import cubeXL from "../assets/ambisonics/cubeXL.json";
+import grazArray from "../assets/ambisonics/grazArray.json";
+import grazArrayXL from "../assets/ambisonics/grazArrayXL.json";
 import envelopeSF from "../assets/ambisonics/envelopeSF.json";
-//import icosehedral from "../assets/ambisonics/icosahedral.json";
+import ico from "../assets/ambisonics/ico.json";
 
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
-import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs1to8.wav";
+import decodingFiltersOrder1ch1to08 from "../assets/ambisonics/irsMagLs_o1_ch_1to4.wav";
 import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs9to16.wav";
 import decodingFilters17to24ch from "../assets/ambisonics/irsMagLs17to24.wav";
 import decodingFilters25ch from "../assets/ambisonics/irsMagLs25.wav";
@@ -34,7 +34,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.refDistance = 1;
     this.roomSimulationLevel = 1;
     console.log("created new ambisonics audio source with decoding order " + this.binauralDecodingOrder);
-    this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch, decodingFilters17to24ch, decodingFilters25ch];
+    this.hrirUrls[0] = [decodingFilters01to08ch, decodingFilters09to16ch, decodingFilters17to24ch, decodingFilters25ch];
   }
 
   disconnect() {
@@ -195,14 +195,16 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     )
       return;
 
-    if (newDecoderConfig == "cube") {
-      this.decoderConfig = cube;
-    } else if (newDecoderConfig == "cubeXL") {
-      this.decoderConfig = cubeXL;
-    } else if (newDecoderConfig == "icosehedral") {
-      this.decoderConfig = icosehedral;
+    if (newDecoderConfig == "grazArray") {
+      this.decoderConfig = grazArray;
+    } else if (newDecoderConfig == "grazArrayXL") {
+      this.decoderConfig = grazArrayXL;
     } else if (newDecoderConfig == "envelopeSF") {
       this.decoderConfig = envelopeSF;
+    } else if (newDecoderConfig == "ico") {
+      this.decoderConfig = ico;
+    } else if (newDecoderConfig == "default") {
+      this.decoderConfig = grazArray;
     }
 
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
