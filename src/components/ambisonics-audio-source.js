@@ -4,6 +4,7 @@ import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs1to8.wav";
 import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs9to16.wav";
 import decodingFilters17to24ch from "../assets/ambisonics/irsMagLs17to24.wav";
 import decodingFilters25ch from "../assets/ambisonics/irsMagLs25.wav";
+import brir from "../assets/ambisonics/brir_no_direct8192.wav";
 
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
 import HOALoader from "../utils/hoa-loader.js";
@@ -27,6 +28,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
     this.refDistance = 1;
+    this.roomSimulationLevel = 1;
     console.log("created new ambisonics audio source with decoding order " + this.binauralDecodingOrder);
     this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch, decodingFilters17to24ch, decodingFilters25ch];
   }
@@ -117,6 +119,13 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.ambisonicsSource = newSource;
   }
 
+  setRoomSimulationLevel(newLevel) {
+    this.roomSimulationLevel = newLevel;
+    if (this.context.roomGain) {
+      this.context.roomGain.gain.value = this.roomSimulationLevel;
+    }
+  }
+
   setupAudioRoutingGraph() {
     // decoding to virtual loudspeakers
     console.log("ambisonics: setting up decoder");
@@ -151,6 +160,20 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     }
 
     this.binauralDecoder.out.connect(this.context.destination);
+
+    // add additional BRIR path
+    this.brirConvolver = this.context.createConvolver();
+    this.brirConvolver.normalize = false;
+    this.roomGain = this.context.createGain();
+    this.roomGain.gain.value = this.roomSimulationLevel;
+    this.loadBrir();
+    this.binauralDecoder.in.connect(
+      this.roomGain,
+      0,
+      0
+    ); // connect only W channel
+    this.roomGain.connect(this.brirConvolver);
+    this.brirConvolver.connect(this.context.destination);
   }
 
   loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
@@ -162,8 +185,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       return;
 
     console.log("ambisonics: loadDecoderConfig");
-    console.log(newLoudspeakerArrayOffset);
-    console.log(newDecoderConfigUrl);
     this.decoderConfigUrl = newDecoderConfigUrl;
     this.decoderConfig = defaultAmbiDecoderConfig;
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
@@ -184,6 +205,13 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
 
     this.constructLoudspeakers();
     this.setupAudioRoutingGraph();
+  }
+
+  async loadBrir() {
+    const response = await fetch(brir);
+    const arrayBuffer = await response.arrayBuffer();
+    this.brirConvolver.buffer = await this.context.decodeAudioData(arrayBuffer);
+    console.log("ambisonics: loaded brir");
   }
 
   // eslint-disable-next-line no-unused-vars

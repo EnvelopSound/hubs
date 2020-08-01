@@ -25,12 +25,11 @@ export default class HOAloader {
     this.loadCount = 0;
     this.loaded = false;
     this.onLoad = callback;
-    this.urls = urls; 
+    this.urls = urls;
 
-    if (this.nChGroups > this.urls.length){
+    if (this.nChGroups > this.urls.length) {
       alert("Not enough Filters for the given order");
     }
-
   }
 
   loadBuffers(url, index) {

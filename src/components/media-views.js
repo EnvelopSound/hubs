@@ -262,7 +262,7 @@ AFRAME.registerComponent("media-video", {
     loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
     loudspeakerVisible: { type: "string", default: true },
     loudspeakerArrayOffset: { type: "number", default: 0 },
-    roomSimulationLevel: { type: "number", default: 0 },
+    roomSimulationLevel: { type: "number", default: 1 },
     decodingOrder: { type: "number", default: 3 },
     componentName: { type: "string" }
   },
@@ -562,6 +562,7 @@ AFRAME.registerComponent("media-video", {
         this.audio.setInputOrder(Math.sqrt(this.numDASHAudioChannels) - 1);
       }
       this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
+      this.audio.setRoomSimulationLevel(this.data.roomSimulationLevel);
       this.setPositionalAudioProperties();
 
       if (this.data.loudspeakerSetupUrl) {
