@@ -21,13 +21,13 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.mediaEl = mediaEl; // entity for element containing audio / video player
     this.context = this.mediaEl.sceneEl.audioListener.context;
     this.audioListener = this.mediaEl.sceneEl.audioListener;
-    this.finalDecodingOrder = order;
+    this.binauralDecodingOrder = order;
     this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;
     this.refDistance = 1;
-    console.log("created new ambisonics audio source with decoding order " + this.finalDecodingOrder);
+    console.log("created new ambisonics audio source with decoding order " + this.binauralDecodingOrder);
     this.hrirUrls = [decodingFilters01to08ch, decodingFilters09to16ch, decodingFilters17to24ch, decodingFilters25ch];
   }
 
@@ -127,8 +127,8 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
 
     this.loudspeakerDecoder = new MatrixMultiplier(this.context, this.decoderMatrix);
     this.loudspeakerDecoderOutSplitter = this.context.createChannelSplitter(this.numLoudspeakers);
-    this.binauralDecoder = new BinauralDecoder(this.context, this.finalDecodingOrder);
-    this.hoaloader = new HOALoader(this.context, this.finalDecodingOrder, this.hrirUrls, loadedBuffer => {
+    this.binauralDecoder = new BinauralDecoder(this.context, this.binauralDecodingOrder);
+    this.hoaloader = new HOALoader(this.context, this.binauralDecodingOrder, this.hrirUrls, loadedBuffer => {
       this.binauralDecoder.updateFilters(loadedBuffer);
     });
     this.hoaloader.load();
@@ -140,7 +140,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     // connect the decoder outputs to virtual loudspeakers
     for (let i = 0; i < this.numLoudspeakers; ++i) {
       const lsp = this.loudspeakers[i];
-      lsp.encoder = new MonoEncoder(this.context, this.finalDecodingOrder);
+      lsp.encoder = new MonoEncoder(this.context, this.binauralDecodingOrder);
       this.loudspeakerDecoderOutSplitter.connect(
         lsp.gain,
         i,
