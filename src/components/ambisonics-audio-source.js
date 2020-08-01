@@ -2,14 +2,9 @@ import grazArray from "../assets/ambisonics/grazArray.json";
 import grazArrayXL from "../assets/ambisonics/grazArrayXL.json";
 import envelopeSF from "../assets/ambisonics/envelopeSF.json";
 import ico from "../assets/ambisonics/ico.json";
-
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
-import decodingFiltersOrder1ch1to08 from "../assets/ambisonics/irsMagLs_o1_ch_1to4.wav";
-import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs9to16.wav";
-import decodingFilters17to24ch from "../assets/ambisonics/irsMagLs17to24.wav";
-import decodingFilters25ch from "../assets/ambisonics/irsMagLs25.wav";
+import { decodingFilterUrls } from "../utils/import-decoding-filters.js";
 import brir from "../assets/ambisonics/brir_hp_no_direct8192.wav";
-
 import { n3dToSn3dDecoderMatrix } from "../utils/sh-eval";
 import HOALoader from "../utils/hoa-loader.js";
 import BinauralDecoder from "../utils/hoa-decoder.js";
@@ -33,8 +28,8 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.masterGain = 1;
     this.refDistance = 1;
     this.roomSimulationLevel = 1;
-    console.log("created new ambisonics audio source with decoding order " + this.binauralDecodingOrder);
-    this.hrirUrls[0] = [decodingFilters01to08ch, decodingFilters09to16ch, decodingFilters17to24ch, decodingFilters25ch];
+    console.log("created new ambisonics audio source with binaural decoding order " + this.binauralDecodingOrder);
+    this.decodingFilterUrls = decodingFilterUrls;
   }
 
   disconnect() {
@@ -117,7 +112,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
       this.loudspeakerDecoder.decoderOrder !== this.inputStreamOrder
     ) {
       console.warn("Warning: DASH stream order and Ambisonics decoding order are not the same!");
-      console.log("decoder order: " + this.loudspeakerDecoder.decoderOrder);
+      console.log("loudspeaker decoder order: " + this.loudspeakerDecoder.decoderOrder);
       console.log("input stream order " + this.inputStreamOrder);
     }
   }
@@ -145,7 +140,7 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.loudspeakerDecoder = new MatrixMultiplier(this.context, this.decoderMatrix);
     this.loudspeakerDecoderOutSplitter = this.context.createChannelSplitter(this.numLoudspeakers);
     this.binauralDecoder = new BinauralDecoder(this.context, this.binauralDecodingOrder);
-    this.hoaloader = new HOALoader(this.context, this.binauralDecodingOrder, this.hrirUrls, loadedBuffer => {
+    this.hoaloader = new HOALoader(this.context, this.binauralDecodingOrder, this.decodingFilterUrls, loadedBuffer => {
       this.binauralDecoder.updateFilters(loadedBuffer);
     });
     this.hoaloader.load();
