@@ -259,7 +259,7 @@ AFRAME.registerComponent("media-video", {
     time: { type: "number" },
     tickRate: { default: 1000 }, // ms interval to send time interval updates
     syncTolerance: { default: 2 },
-    loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
+    loudspeakerSetup: { type: "string", default: "envelopeSF" },
     loudspeakerVisible: { type: "string", default: true },
     loudspeakerArrayOffset: { type: "number", default: 0 },
     roomSimulationLevel: { type: "number", default: 0 },
@@ -557,7 +557,6 @@ AFRAME.registerComponent("media-video", {
     } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       console.log("setup ambisonics audio!");
 
-
       this.audio = new AmbisonicsAudioSource(this.el, this.data.decodingOrder);
       if (this.numDASHAudioChannels) {
         this.audio.setInputOrder(Math.sqrt(this.numDASHAudioChannels) - 1);
@@ -565,13 +564,12 @@ AFRAME.registerComponent("media-video", {
       this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
       this.setPositionalAudioProperties();
 
-      if (this.data.loudspeakerSetupUrl) {
         this.audio.loadDecoderConfig(
-          this.data.loudspeakerSetupUrl,
+          this.data.loudspeakerSetup,
           this.data.loudspeakerArrayOffset,
           this.data.loudspeakerVisible
         );
-      }
+      
       this.distanceBasedAttenuation = 1;
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);

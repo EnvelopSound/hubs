@@ -231,7 +231,7 @@ async function mediaInflator(el, componentName, componentData, components) {
       mediaOptions.distanceModel = componentData.distanceModel;
       mediaOptions.rolloffFactor = componentData.rolloffFactor;
       mediaOptions.refDistance = componentData.refDistance;
-      mediaOptions.loudspeakerSetupUrl = componentData.loudspeakerSetupUrl;
+      mediaOptions.loudspeakerSetup = componentData.loudspeakerSetup;
       mediaOptions.loudspeakerVisible = componentData.loudspeakerVisible;
       mediaOptions.loudspeakerArrayOffset = componentData.loudspeakerArrayOffset;
       mediaOptions.roomSimulationLevel = componentData.roomSimulationLevel;
