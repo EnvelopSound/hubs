@@ -259,7 +259,7 @@ AFRAME.registerComponent("media-video", {
     time: { type: "number" },
     tickRate: { default: 1000 }, // ms interval to send time interval updates
     syncTolerance: { default: 2 },
-    loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
+    loudspeakerSetup: { type: "string", default: "envelopeSF" },
     loudspeakerVisible: { type: "string", default: true },
     loudspeakerArrayOffset: { type: "number", default: 0 },
     roomSimulationLevel: { type: "number", default: 1 },
@@ -565,13 +565,12 @@ AFRAME.registerComponent("media-video", {
       this.audio.setRoomSimulationLevel(this.data.roomSimulationLevel);
       this.setPositionalAudioProperties();
 
-      if (this.data.loudspeakerSetupUrl) {
         this.audio.loadDecoderConfig(
-          this.data.loudspeakerSetupUrl,
+          this.data.loudspeakerSetup,
           this.data.loudspeakerArrayOffset,
           this.data.loudspeakerVisible
         );
-      }
+      
       this.distanceBasedAttenuation = 1;
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);

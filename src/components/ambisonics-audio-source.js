@@ -1,4 +1,7 @@
-import defaultAmbiDecoderConfig from "../assets/ambisonics/cube.json";
+import cube from "../assets/ambisonics/cube.json";
+import cubeXL from "../assets/ambisonics/cubeXL.json";
+import envelopeSF from "../assets/ambisonics/envelopeSF.json";
+
 import MatrixMultiplier from "../utils/webaudio-matrix-multiplier.js";
 import decodingFilters01to08ch from "../assets/ambisonics/irsMagLs1to8.wav";
 import decodingFilters09to16ch from "../assets/ambisonics/irsMagLs9to16.wav";
@@ -176,17 +179,20 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.brirConvolver.connect(this.context.destination);
   }
 
-  loadDecoderConfig(newDecoderConfigUrl, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
+  loadDecoderConfig(newDecoderConfig, newLoudspeakerArrayOffset, loudspeakerShouldBeVisible) {
     if (
-      this.decoderConfigUrl === newDecoderConfigUrl &&
+      this.decoderConfig === newDecoderConfig &&
       this.loudspeakerArrayOffset === newLoudspeakerArrayOffset &&
       this.loudspeakerVisible === loudspeakerShouldBeVisible
     )
       return;
 
-    console.log("ambisonics: loadDecoderConfig");
-    this.decoderConfigUrl = newDecoderConfigUrl;
-    this.decoderConfig = defaultAmbiDecoderConfig;
+    if (newDecoderConfig == "cube") {
+      this.decoderConfig = cube;
+    } else if (newDecoderConfig == "envelopeSF") {
+      this.decoderConfig = envelopeSF;
+    }
+
     this.LoudspeakerLayout = this.decoderConfig.LoudspeakerLayout.Loudspeakers;
     this.decoderMatrix = this.decoderConfig.Decoder.Matrix;
     this.decoderExpectedInputNormalization = this.decoderConfig.Decoder.ExpectedInputNormalization;
