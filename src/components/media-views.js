@@ -790,6 +790,19 @@ AFRAME.registerComponent("media-video", {
               scope.audio.setInputOrder(Math.sqrt(scope.numDASHAudioChannels) - 1);
             }
           });
+
+          // apply default DASH settings
+          const dashSettings = {
+            streaming: {
+              useSuggestedPresentationDelay: false,
+              lowLatencyEnabled: false,
+              stableBufferTime: 20,
+              bufferTimeAtTopQualityLongForm: 20
+            }
+          };
+          console.log("applying new default DASH settings: ");
+          console.log(dashSettings);
+          dashPlayer.updateSettings(dashSettings);
         }
       } else if (AFRAME.utils.material.isHLS(url, contentType)) {
         if (HLS.isSupported()) {
