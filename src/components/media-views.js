@@ -16,7 +16,7 @@ import { applyPersistentSync } from "../utils/permissions-utils";
 import { refreshMediaMirror, getCurrentMirroredMedia } from "../utils/mirror-utils";
 import { detect } from "detect-browser";
 import semver from "semver";
-import { ambisonicsAudioSource } from "./ambisonics-audio-source.js";
+import { AmbisonicsAudioSource } from "./ambisonics-audio-source.js";
 
 /**
  * Warning! This require statement is fragile!
@@ -163,7 +163,7 @@ function disposeTexture(texture) {
 
   texture.dispose();
 }
-2
+
 class TextureCache {
   cache = new Map();
 
@@ -259,9 +259,12 @@ AFRAME.registerComponent("media-video", {
     time: { type: "number" },
     tickRate: { default: 1000 }, // ms interval to send time interval updates
     syncTolerance: { default: 2 },
-    loudspeakerSetupUrl: { type: "string", default: "testurl.json" },
+    loudspeakerSetup: { type: "string", default: "defaultSetup" },
     loudspeakerVisible: { type: "string", default: true },
-    loudspeakerArrayOffset: { type: "number", default: 10}
+    loudspeakerArrayOffset: { type: "number", default: 0 },
+    roomSimulationLevel: { type: "number", default: 1 },
+    decodingOrder: { type: "number", default: 3 },
+    componentName: { type: "string" }
   },
 
   init() {
@@ -480,10 +483,11 @@ AFRAME.registerComponent("media-video", {
           ? window.APP.store.state.preferences.globalMediaVolume
           : 100;
 
-      if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
+      if (this.data.audioType === "ambisonics") {
         this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
-      else
+      } else {
         this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume;
+      }
     }
   },
 
@@ -551,48 +555,36 @@ AFRAME.registerComponent("media-video", {
       this.audio = new THREE.PositionalAudio(this.el.sceneEl.audioListener);
       this.setPositionalAudioProperties();
       this.distanceBasedAttenuation = 1;
-    } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
-      console.log("setup ambisonics audio!");
-      this.audio = new ambisonicsAudioSource(this.el);
-
-      // console.log(ambiDecoderConfig);
-      console.log("print video data and element");
-      console.log(this.data);
-      console.log(this.el);
-      // console.log(this.el.object3D.position);
-      // console.log(this.audio);
-      // console.log(this.audio.position);
-      // this.el.object3D.object3DMap has mesh, object3D (name: video), sound
-
+    } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {      
+      this.audio = new AmbisonicsAudioSource(this.el, this.data.decodingOrder);
+      if (this.numDASHAudioChannels) {
+        this.audio.setInputOrder(Math.sqrt(this.numDASHAudioChannels) - 1);
+      }
+      this.audio.setMediaElementAudioSource(this.mediaElementAudioSource);
+      this.audio.setRoomSimulationLevel(this.data.roomSimulationLevel);
       this.setPositionalAudioProperties();
+      this.audio.loadDecoderConfig(
+        this.data.loudspeakerSetup,
+        this.data.loudspeakerArrayOffset,
+        this.data.loudspeakerVisible
+      );
       this.distanceBasedAttenuation = 1;
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
     }
-
-    this.audio.setupConnectDecoder(this.mediaElementAudioSource);
     this.el.setObject3D("sound", this.audio);
   },
 
   setPositionalAudioProperties() {
-    this.audio.setDistanceModel(this.data.distanceModel);
     this.audio.setRolloffFactor(this.data.rolloffFactor);
     this.audio.setRefDistance(this.data.refDistance);
-    this.audio.setMaxDistance(this.data.maxDistance);
-    this.audio.panner.coneInnerAngle = this.data.coneInnerAngle;
-    this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
-    this.audio.panner.coneOuterGain = this.data.coneOuterGain;
 
-    if (this.data.audioType === "ambisonics") {
-      this.audio.updatePannerProperties();
-
-      if (this.data.loudspeakerSetupUrl) {
-        this.audio.loadDecoderConfig(
-          this.data.loudspeakerSetupUrl,
-          this.data.loudspeakerArrayOffset,
-          this.data.loudspeakerVisible
-        );
-      }
+    if (this.data.audioType !== "ambisonics") {
+      this.audio.setDistanceModel(this.data.distanceModel);
+      this.audio.setMaxDistance(this.data.maxDistance);
+      this.audio.panner.coneInnerAngle = this.data.coneInnerAngle;
+      this.audio.panner.coneOuterAngle = this.data.coneOuterAngle;
+      this.audio.panner.coneOuterGain = this.data.coneOuterGain;
     }
   },
 
@@ -707,7 +699,7 @@ AFRAME.registerComponent("media-video", {
       this.el.setObject3D("mesh", this.mesh);
     }
 
-    if (this.data.contentType.startsWith("audio/")) {
+    if (this.data.contentType.startsWith("audio/") || this.data.componentName === "audio") {
       this.mesh.material.map = audioIconTexture;
     } else {
       this.mesh.material.map = texture;
@@ -787,6 +779,31 @@ AFRAME.registerComponent("media-video", {
         // dashPlayer.addUTCTimingSource("urn:mpeg:dash:utc:http-head:2014", location.href);
 
         texture.dash = dashPlayer;
+
+        if (this.data.audioType === "ambisonics") {
+          const scope = this;
+          dashPlayer.on(MediaPlayer.events.MANIFEST_LOADED, event => {
+            const data = event.data;
+            const audioAdaptionSet = data.Period.AdaptationSet_asArray.find(elem => elem.contentType === "audio");
+            scope.numDASHAudioChannels = audioAdaptionSet.Representation.AudioChannelConfiguration.value;
+            if (scope.audio) {
+              scope.audio.setInputOrder(Math.sqrt(scope.numDASHAudioChannels) - 1);
+            }
+          });
+
+          // apply default DASH settings
+          const dashSettings = {
+            streaming: {
+              useSuggestedPresentationDelay: false,
+              lowLatencyEnabled: false,
+              stableBufferTime: 20,
+              bufferTimeAtTopQualityLongForm: 20
+            }
+          };
+          console.log("applying new default DASH settings: ");
+          console.log(dashSettings);
+          dashPlayer.updateSettings(dashSettings);
+        }
       } else if (AFRAME.utils.material.isHLS(url, contentType)) {
         if (HLS.isSupported()) {
           const corsProxyPrefix = `https://${configs.CORS_PROXY_SERVER}/`;
@@ -986,7 +1003,7 @@ AFRAME.registerComponent("media-video", {
               ? window.APP.store.state.preferences.globalMediaVolume
               : 100;
 
-          if (this.data.audioType === "ambisonics") // do not set distance attenuation on ambisonics ("main") object
+          if (this.data.audioType === "ambisonics")
             this.audio.setMasterGain((globalMediaVolume / 100) * this.data.volume);
           else
             this.audio.gain.gain.value = (globalMediaVolume / 100) * this.data.volume * this.distanceBasedAttenuation;

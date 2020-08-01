@@ -1,4 +1,43 @@
-## Adding Ambisonics Support to Hubs
+# Adding Ambisonic Streaming Support to Hubs
+Ambisonic streaming support is provided by extending Audio Node and Video Vode by the AudioType **ambisonics**.
+
+A video or audio element for an Ambisonics stream can be configured using the modified spoke editor [2].
+
+When a video or audio element with AudioType ambisonics is added to the scene in Spoke, the url to a dash stream with ambisonics content is set. Such a stream can be created using OBS music edition [2] and multichannel RTMP to dash transcoding. Currently 16 channels are possible, which limits the ambisoncs order to 3. 
+
+In hubs, a video or audio element with AudioType ambisonics creates an AmbisonicsAudioSource. The AmbisonicsAudioSource is initialized with a pre-defined loudspeaker setup, to which the Ambisonics stream is decoded to create one audio stream for each loudspeaker. 
+
+These loudspeaker streams could be rendered using pannerNodes, but as an other option with better sound and larger flexibility, Ambisonics is used for this as well. Depending on the listener and the loudspeaker position, a gain and a direction is computed and the loudspeaker stream is again encoded into Ambisonics. The sum of all loudspeaker sources is then decoded to binaural audio using SH domain decoding filters, based on Magnitude Least squares decoder design [3]. 
+
+Additionally, position independent room simulation can be added. 
+
+## Ambisonics Settings
+
+When creating a audio or video element with AudioType ambisonics in Spoke [1], the following can be specified: 
+
+- Loudspeaker Setup: Select from a list of loudspeaker setups, new ones can be added in LoudspeakerSetups, corresponding decoder files need to be provided in the assets, which can be       created for example using the Allrad Decoder [4]. 
+
+- Loudspeaker Visible: Toggles the visibility of the loudspeakers in hubs
+
+- Array Offset: Moves the center of the loudspeaker array in the direction in which the Video or Audip Element is facing. (Usefull for placing the array in front of the screen on which the stream is playing)
+
+- Rolloff Factor / Ref Distance: Control the distance dependend attenuation of the loudspeakers. The same as in AudioType pannernode, when inverse is selected as distance model
+
+- Room Simulation Level
+
+- Decoding Order: Controls the order for the binaural decoding of the spatialized loudspeaker Elements. Note that this is independent of the Ambisonics Stream order which is decoded to the loudspeakers. Here 4th order is default and maximum, due to Web Audio API channel limitations.
+
+Set "Video" or "Audio" to the streaming URL. Depending on whether you create a video or audio element, a screen will be visible. 
+
+[1] https://github.com/EnvelopSound/Spoke/tree/ambisonics
+
+[2] https://github.com/pkviet/obs-studio/releases?fbclid=IwAR0I8JRR1WtN4sruTD_EHm1hEmsSJAV-2VCSF1qFHX6R_vzZMth06WHrhI4
+
+[3] Schörkhuber, C., Zaunschirm, M. Höldrich, R., Rendering of Ambisonic Signals via Magnitude Least Squares
+
+[4] https://plugins.iem.at/docs/allradecoder/
+
+## Testing
 You can follow the current development process by cloning this repository, checking out the branch "ambisonics", starting the local Hubs (npm run dev) and opening our development room under https://localhost:8080/hub.html?hub_id=fjTBUN2.
 
 ## [Mozilla Hubs](https://hubs.mozilla.com/)
