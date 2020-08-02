@@ -23,7 +23,6 @@ export class AmbisonicsAudioSource extends THREE.Object3D {
     this.context = this.mediaEl.sceneEl.audioListener.context;
     this.audioListener = this.mediaEl.sceneEl.audioListener;
     this.binauralDecodingOrder = order;
-    this.panner = { coneInnerAngle: 0, coneOuterAngle: 0, coneOuterGain: 0 };
     this.loudspeakers = [];
     this.arrayCenter = this.mediaEl.object3D.position;
     this.masterGain = 1;

@@ -555,7 +555,8 @@ AFRAME.registerComponent("media-video", {
       this.audio = new THREE.PositionalAudio(this.el.sceneEl.audioListener);
       this.setPositionalAudioProperties();
       this.distanceBasedAttenuation = 1;
-    } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {      
+      this.audio.setNodeSource(this.mediaElementAudioSource);
+    } else if (!disablePositionalAudio && this.data.audioType === "ambisonics") {
       this.audio = new AmbisonicsAudioSource(this.el, this.data.decodingOrder);
       if (this.numDASHAudioChannels) {
         this.audio.setInputOrder(Math.sqrt(this.numDASHAudioChannels) - 1);
@@ -571,6 +572,7 @@ AFRAME.registerComponent("media-video", {
       this.distanceBasedAttenuation = 1;
     } else {
       this.audio = new THREE.Audio(this.el.sceneEl.audioListener);
+      this.audio.setNodeSource(this.mediaElementAudioSource);
     }
     this.el.setObject3D("sound", this.audio);
   },
